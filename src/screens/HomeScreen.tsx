@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, TextInput, Platform } from 'react-native';
+import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { DrawerLayout } from 'react-native-gesture-handler';
 import 'react-native-get-random-values';
-import { v4 as uuid } from 'uuid';
 
 import ContactCard from '../components/ContactCard';
 import TagPane from '../components/TagPane';
