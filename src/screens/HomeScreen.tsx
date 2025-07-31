@@ -1,24 +1,35 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, StyleSheet, TouchableOpacity, Text, TextInput } from 'react-native';
 import * as Contacts from 'react-native-contacts';
+import { DrawerLayout } from 'react-native-gesture-handler';
 import { v4 as uuid } from 'uuid';
 
-import ContactBubble from '../components/ContactBubble';
-import TagFilterBar from '../components/TagFilterBar';
+import ContactCard from '../components/ContactCard';
+import TagPane from '../components/TagPane';
 import { loadContacts, saveContacts } from '../lib/storage';
 import { Contact } from '../lib/types';
 
 export default function HomeScreen() {
+  const drawer = useRef<DrawerLayout>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
-  const [filter, setFilter] = useState<string | null>(null);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [search, setSearch] = useState('');
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
     loadContacts().then((data) => {
       if (data.length === 0) {
         const dummy: Contact[] = [
-          { id: uuid(), name: 'Alice', tags: ['friends'] },
-          { id: uuid(), name: 'Bob', tags: ['work'] },
-          { id: uuid(), name: 'Carol', tags: ['family'] },
+          { id: uuid(), name: 'Alice', phone: '555-1111', email: 'alice@example.com', tags: ['friends'] },
+          { id: uuid(), name: 'Bob', phone: '555-2222', email: 'bob@example.com', tags: ['work'] },
+          { id: uuid(), name: 'Carol', phone: '555-3333', email: 'carol@example.com', tags: ['family'] },
+          { id: uuid(), name: 'Dave', phone: '555-4444', email: 'dave@example.com', tags: ['work', 'friends'] },
+          { id: uuid(), name: 'Eve', phone: '555-5555', email: 'eve@example.com', tags: ['gym'] },
+          { id: uuid(), name: 'Frank', phone: '555-6666', email: 'frank@example.com', tags: ['family', 'gym'] },
+          { id: uuid(), name: 'Grace', phone: '555-7777', email: 'grace@example.com', tags: ['work'] },
+          { id: uuid(), name: 'Heidi', phone: '555-8888', email: 'heidi@example.com', tags: ['friends', 'work'] },
+          { id: uuid(), name: 'Ivan', phone: '555-9999', email: 'ivan@example.com', tags: ['family'] },
+          { id: uuid(), name: 'Judy', phone: '555-0000', email: 'judy@example.com', tags: ['gym'] },
         ];
         setContacts(dummy);
         saveContacts(dummy);
@@ -28,9 +39,38 @@ export default function HomeScreen() {
     });
   }, []);
 
+  const toggleTag = (tag: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
+
   const allTags = Array.from(new Set(contacts.flatMap((c) => c.tags)));
 
-  const filtered = filter ? contacts.filter((c) => c.tags.includes(filter)) : contacts;
+  const searchFiltered = contacts.filter((c) => {
+    const term = search.toLowerCase();
+    return (
+      c.name.toLowerCase().includes(term) ||
+      c.tags.some((t) => t.toLowerCase().includes(term))
+    );
+  });
+
+  const matchStatus = (c: Contact): 'full' | 'partial' | 'none' => {
+    if (selectedTags.length === 0) return 'full';
+    const hasAll = selectedTags.every((t) => c.tags.includes(t));
+    if (hasAll) return 'full';
+    const hasSome = selectedTags.some((t) => c.tags.includes(t));
+    return hasSome ? 'partial' : 'none';
+  };
+
+  const sortByName = (a: Contact, b: Contact) =>
+    a.name.localeCompare(b.name);
+
+  const ordered = [
+    ...searchFiltered.filter((c) => matchStatus(c) === 'full').sort(sortByName),
+    ...searchFiltered.filter((c) => matchStatus(c) === 'partial').sort(sortByName),
+    ...searchFiltered.filter((c) => matchStatus(c) === 'none').sort(sortByName),
+  ];
 
   const handleImport = async () => {
     try {
@@ -57,40 +97,65 @@ export default function HomeScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <TagFilterBar tags={allTags} selected={filter} onSelect={setFilter} />
-      <View style={styles.canvas}>
-        {filtered.map((contact, idx) => (
-          <ContactBubble key={contact.id} contact={contact} />
-        ))}
-      </View>
-      <View style={styles.buttons}>
-        <TouchableOpacity style={styles.button} onPress={() => {}}>
-          <Text style={styles.buttonText}>+</Text>
+    <DrawerLayout
+      ref={drawer}
+      drawerWidth={180}
+      renderNavigationView={() => (
+        <TagPane tags={allTags} active={selectedTags} toggle={toggleTag} />
+      )}
+    >
+      <View style={styles.container}>
+        <TextInput
+          style={styles.search}
+          placeholder="Search contacts..."
+          value={search}
+          onChangeText={setSearch}
+        />
+        <View style={styles.stack}>
+          {ordered.map((contact, idx) => (
+            <ContactCard
+              key={contact.id}
+              contact={contact}
+              expanded={expanded === contact.id}
+              onExpand={() => setExpanded(contact.id)}
+              onClose={() => setExpanded(null)}
+              match={matchStatus(contact)}
+              index={idx}
+            />
+          ))}
+        </View>
+        <TouchableOpacity style={[styles.fab, styles.add]} onPress={() => {}}>
+          <Text style={styles.fabText}>+</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={handleImport}>
-          <Text style={styles.buttonText}>Import</Text>
+        <TouchableOpacity style={[styles.fab, styles.import]} onPress={handleImport}>
+          <Text style={styles.fabText}>Import</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </DrawerLayout>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  canvas: { flex: 1 },
-  buttons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 16,
+  search: {
+    borderColor: '#ccc',
+    borderWidth: 1,
+    margin: 16,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
-  button: {
-    backgroundColor: '#76c5ce',
+  stack: {
+    flex: 1,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 20,
     padding: 12,
     borderRadius: 24,
+    backgroundColor: '#6ECEDB',
   },
-  buttonText: {
-    color: 'white',
-    fontSize: 18,
-  },
+  add: { left: 20 },
+  import: { right: 20 },
+  fabText: { color: 'white', fontSize: 18 },
 });
