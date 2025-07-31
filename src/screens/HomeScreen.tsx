@@ -55,22 +55,37 @@ export default function HomeScreen() {
     );
   });
 
-  const matchStatus = (c: Contact): 'full' | 'partial' | 'none' => {
-    if (selectedTags.length === 0) return 'full';
-    const hasAll = selectedTags.every((t) => c.tags.includes(t));
-    if (hasAll) return 'full';
-    const hasSome = selectedTags.some((t) => c.tags.includes(t));
-    return hasSome ? 'partial' : 'none';
-  };
+  const matchStatus = React.useCallback(
+    (c: Contact): 'full' | 'partial' | 'none' => {
+      if (selectedTags.length === 0) return 'full';
+      const hasAll = selectedTags.every((t) => c.tags.includes(t));
+      if (hasAll) return 'full';
+      const hasSome = selectedTags.some((t) => c.tags.includes(t));
+      return hasSome ? 'partial' : 'none';
+    },
+    [selectedTags]
+  );
 
   const sortByName = (a: Contact, b: Contact) =>
     a.name.localeCompare(b.name);
 
-  const ordered = [
-    ...searchFiltered.filter((c) => matchStatus(c) === 'full').sort(sortByName),
-    ...searchFiltered.filter((c) => matchStatus(c) === 'partial').sort(sortByName),
-    ...searchFiltered.filter((c) => matchStatus(c) === 'none').sort(sortByName),
-  ];
+  const ordered = React.useMemo(() => {
+    const groups = {
+      full: [] as Contact[],
+      partial: [] as Contact[],
+      none: [] as Contact[],
+    };
+
+    for (const c of searchFiltered) {
+      groups[matchStatus(c)].push(c);
+    }
+
+    return [
+      ...groups.full.sort(sortByName),
+      ...groups.partial.sort(sortByName),
+      ...groups.none.sort(sortByName),
+    ];
+  }, [searchFiltered, matchStatus]);
 
   const handleImport = async () => {
     try {
