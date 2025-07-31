@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DrawerLayout } from 'react-native-gesture-handler';
 import 'react-native-get-random-values';
 
@@ -14,6 +15,8 @@ export default function HomeScreen() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<string | null>(null);
+  const insets = useSafeAreaInsets();
+  const { width } = Dimensions.get('window');
 
   useEffect(() => {
     loadContacts().then((data) => {
@@ -117,25 +120,29 @@ export default function HomeScreen() {
   };
 
   return (
-    <DrawerLayout
-      ref={drawer}
-      drawerWidth={180}
-      renderNavigationView={() => (
-        <TagPane tags={allTags} active={selectedTags} toggle={toggleTag} />
-      )}
-    >
-      <View style={styles.container}>
-        <TextInput
-          style={styles.search}
-          placeholder="Search contacts..."
-          value={search}
-          onChangeText={setSearch}
-        />
-        <View style={styles.stack}>
-          {ordered.map((contact, idx) => (
-            <ContactCard
-              key={contact.id}
-              contact={contact}
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+      <DrawerLayout
+        ref={drawer}
+        drawerWidth={180}
+        renderNavigationView={() => (
+          <TagPane tags={allTags} active={selectedTags} toggle={toggleTag} />
+        )}
+      >
+        <View style={styles.container}>
+          <TextInput
+            style={[
+              styles.search,
+              { marginTop: insets.top + 8, width: width - 32 },
+            ]}
+            placeholder="Search contacts..."
+            value={search}
+            onChangeText={setSearch}
+          />
+          <View style={styles.stack}>
+            {ordered.map((contact, idx) => (
+              <ContactCard
+                key={contact.id}
+                contact={contact}
               expanded={expanded === contact.id}
               onExpand={() => setExpanded(contact.id)}
               onClose={() => setExpanded(null)}
@@ -143,24 +150,32 @@ export default function HomeScreen() {
               index={idx}
             />
           ))}
+          </View>
+          <TouchableOpacity
+            style={[styles.fab, styles.add, { bottom: insets.bottom + 20 }]}
+            onPress={() => {}}
+          >
+            <Text style={styles.fabText}>+</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.fab, styles.import, { bottom: insets.bottom + 20 }]}
+            onPress={handleImport}
+          >
+            <Text style={styles.fabText}>Import</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity style={[styles.fab, styles.add]} onPress={() => {}}>
-          <Text style={styles.fabText}>+</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.fab, styles.import]} onPress={handleImport}>
-          <Text style={styles.fabText}>Import</Text>
-        </TouchableOpacity>
-      </View>
-    </DrawerLayout>
+      </DrawerLayout>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: '#fff' },
   container: { flex: 1 },
   search: {
     borderColor: '#ccc',
     borderWidth: 1,
-    margin: 16,
+    marginHorizontal: 16,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -170,7 +185,6 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: 20,
     padding: 12,
     borderRadius: 24,
     backgroundColor: '#6ECEDB',
