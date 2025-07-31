@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, TextInput } from 'react-native';
-import * as Contacts from 'react-native-contacts';
+import { View, StyleSheet, TouchableOpacity, Text, TextInput, Platform } from 'react-native';
 import { DrawerLayout } from 'react-native-gesture-handler';
 import { v4 as uuid } from 'uuid';
 
@@ -88,7 +87,13 @@ export default function HomeScreen() {
   }, [searchFiltered, matchStatus]);
 
   const handleImport = async () => {
+    if (Platform.OS === 'web') {
+      console.warn('Import not supported on web');
+      return;
+    }
+
     try {
+      const Contacts = (await import('react-native-contacts')).default;
       const permission = await Contacts.requestPermission();
       if (permission === 'authorized') {
         const picked = await Contacts.getAll();
