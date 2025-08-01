@@ -9,14 +9,29 @@ node_modules/
 # 📦 Expo / Metro
 # -----------------------------
 .expo/
+.expo-shared/
 dist/
 web-build/
 expo-env.d.ts
+.metro/
 .metro-health-check*
+.eas/
+devices.json
 
 # -----------------------------
 # 📱 Native (Android/iOS)
 # -----------------------------
+android/
+ios/
+android/.gradle/
+android/app/build/
+android/build/
+ios/Pods/
+ios/build/
+ios/*.xcodeproj/
+ios/*.xcworkspace
+ios/.DS_Store
+
 .kotlin/
 *.orig.*
 *.jks
@@ -25,17 +40,12 @@ expo-env.d.ts
 *.key
 *.mobileprovision
 
-# Android
-android/.gradle/
-android/app/build/
-android/build/
-
-# iOS
-ios/Pods/
-ios/build/
-ios/*.xcodeproj/
-ios/*.xcworkspace
-ios/.DS_Store
+# Native build artifacts
+*.apk
+*.aab
+*.xcarchive
+*.app
+*.ipa
 
 # -----------------------------
 # 🔐 Environment / Secrets
