@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import 'react-native-get-random-values';
 import { v4 as uuid } from 'uuid';
@@ -44,6 +44,7 @@ function randomTags(): string[] {
 export default function HomeScreen() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     loadContacts().then((data) => {
@@ -82,6 +83,16 @@ export default function HomeScreen() {
 
   const sortByName = (a: Contact, b: Contact) => a.name.localeCompare(b.name);
 
+  const searchFiltered = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return contacts;
+    return contacts.filter(
+      (c) =>
+        c.name.toLowerCase().includes(term) ||
+        c.tags.some((t) => t.toLowerCase().includes(term))
+    );
+  }, [contacts, search]);
+
   const ordered = useMemo(() => {
     const groups = {
       full: [] as Contact[],
@@ -89,7 +100,7 @@ export default function HomeScreen() {
       none: [] as Contact[],
     };
 
-    for (const c of contacts) {
+    for (const c of searchFiltered) {
       groups[matchStatus(c)].push(c);
     }
 
@@ -98,7 +109,7 @@ export default function HomeScreen() {
       ...groups.partial.sort(sortByName),
       ...groups.none.sort(sortByName),
     ];
-  }, [contacts, matchStatus]);
+  }, [searchFiltered, matchStatus]);
 
   const handleImport = async () => {
     if (Platform.OS === 'web') {
@@ -130,10 +141,16 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <View style={styles.row}>
-        <View style={styles.listContainer}>
-          <ContactList contacts={ordered} getMatch={matchStatus} />
-        </View>
+      <TextInput
+        style={styles.search}
+        placeholder="Search contacts..."
+        value={search}
+        onChangeText={setSearch}
+      />
+      <View style={styles.listContainer}>
+        <ContactList contacts={ordered} getMatch={matchStatus} />
+      </View>
+      <View style={styles.tagPaneWrapper}>
         <TagPane tags={allTags} active={selectedTags} toggle={toggleTag} />
       </View>
       <FABMenu onImport={handleImport} />
@@ -143,6 +160,15 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#fff' },
-  row: { flex: 1, flexDirection: 'row' },
+  search: {
+    borderColor: '#ccc',
+    borderWidth: 1,
+    marginHorizontal: 16,
+    marginTop: 8,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
   listContainer: { flex: 1 },
+  tagPaneWrapper: { marginLeft: 16, marginBottom: 16 },
 });
