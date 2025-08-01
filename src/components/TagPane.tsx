@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { ScrollView, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
 interface Props {
   tags: string[];
@@ -9,8 +9,8 @@ interface Props {
 
 export default function TagPane({ tags, active, toggle }: Props) {
   return (
-    <View style={styles.container}>
-      {tags.map(tag => (
+    <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      {tags.map((tag) => (
         <TouchableOpacity
           key={tag}
           style={[styles.tag, active.includes(tag) && styles.active]}
@@ -19,14 +19,15 @@ export default function TagPane({ tags, active, toggle }: Props) {
           <Text style={styles.text}>{tag}</Text>
         </TouchableOpacity>
       ))}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    padding: 16,
+    paddingVertical: 16,
+    alignItems: 'center',
+    width: 80,
   },
   tag: {
     backgroundColor: '#ccc',

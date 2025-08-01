@@ -1,38 +1,58 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Dimensions, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { DrawerLayout } from 'react-native-gesture-handler';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Platform, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import 'react-native-get-random-values';
+import { v4 as uuid } from 'uuid';
 
-import ContactCard from '../components/ContactCard';
+import ContactList from '../components/ContactList';
 import TagPane from '../components/TagPane';
+import FABMenu from '../components/FABMenu';
 import { loadContacts, saveContacts } from '../lib/storage';
 import { Contact } from '../lib/types';
 
+const names = [
+  'Alice Johnson',
+  'Bob Smith',
+  'Carol Williams',
+  'David Brown',
+  'Eve Davis',
+  'Frank Miller',
+  'Grace Wilson',
+  'Heidi Moore',
+  'Ivan Taylor',
+  'Judy Anderson',
+  'Kevin Thomas',
+  'Laura Jackson',
+  'Mallory White',
+  'Niaj Harris',
+  'Olivia Martin',
+  'Peggy Thompson',
+  'Quentin Garcia',
+  'Rupert Martinez',
+  'Sybil Robinson',
+  'Trent Clark',
+];
+
+const tagPool = ['Work', 'Family', 'Friends', 'Gym', 'Clients', 'Urgent'];
+
+function randomTags(): string[] {
+  const count = Math.floor(Math.random() * 3) + 1;
+  const shuffled = [...tagPool].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
+
 export default function HomeScreen() {
-  const drawer = useRef<DrawerLayout>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [search, setSearch] = useState('');
-  const [expanded, setExpanded] = useState<string | null>(null);
-  const insets = useSafeAreaInsets();
-  const { width } = Dimensions.get('window');
 
   useEffect(() => {
     loadContacts().then((data) => {
       if (data.length === 0) {
-        const dummy: Contact[] = [
-          { id: uuid(), name: 'Alice', phone: '555-1111', email: 'alice@example.com', tags: ['friends'] },
-          { id: uuid(), name: 'Bob', phone: '555-2222', email: 'bob@example.com', tags: ['work'] },
-          { id: uuid(), name: 'Carol', phone: '555-3333', email: 'carol@example.com', tags: ['family'] },
-          { id: uuid(), name: 'Dave', phone: '555-4444', email: 'dave@example.com', tags: ['work', 'friends'] },
-          { id: uuid(), name: 'Eve', phone: '555-5555', email: 'eve@example.com', tags: ['gym'] },
-          { id: uuid(), name: 'Frank', phone: '555-6666', email: 'frank@example.com', tags: ['family', 'gym'] },
-          { id: uuid(), name: 'Grace', phone: '555-7777', email: 'grace@example.com', tags: ['work'] },
-          { id: uuid(), name: 'Heidi', phone: '555-8888', email: 'heidi@example.com', tags: ['friends', 'work'] },
-          { id: uuid(), name: 'Ivan', phone: '555-9999', email: 'ivan@example.com', tags: ['family'] },
-          { id: uuid(), name: 'Judy', phone: '555-0000', email: 'judy@example.com', tags: ['gym'] },
-        ];
+        const dummy = names.map((name) => ({
+          id: uuid(),
+          name,
+          tags: randomTags(),
+        }));
         setContacts(dummy);
         saveContacts(dummy);
       } else {
@@ -49,15 +69,7 @@ export default function HomeScreen() {
 
   const allTags = Array.from(new Set(contacts.flatMap((c) => c.tags)));
 
-  const searchFiltered = contacts.filter((c) => {
-    const term = search.toLowerCase();
-    return (
-      c.name.toLowerCase().includes(term) ||
-      c.tags.some((t) => t.toLowerCase().includes(term))
-    );
-  });
-
-  const matchStatus = React.useCallback(
+  const matchStatus = useCallback(
     (c: Contact): 'full' | 'partial' | 'none' => {
       if (selectedTags.length === 0) return 'full';
       const hasAll = selectedTags.every((t) => c.tags.includes(t));
@@ -68,17 +80,16 @@ export default function HomeScreen() {
     [selectedTags]
   );
 
-  const sortByName = (a: Contact, b: Contact) =>
-    a.name.localeCompare(b.name);
+  const sortByName = (a: Contact, b: Contact) => a.name.localeCompare(b.name);
 
-  const ordered = React.useMemo(() => {
+  const ordered = useMemo(() => {
     const groups = {
       full: [] as Contact[],
       partial: [] as Contact[],
       none: [] as Contact[],
     };
 
-    for (const c of searchFiltered) {
+    for (const c of contacts) {
       groups[matchStatus(c)].push(c);
     }
 
@@ -87,7 +98,7 @@ export default function HomeScreen() {
       ...groups.partial.sort(sortByName),
       ...groups.none.sort(sortByName),
     ];
-  }, [searchFiltered, matchStatus]);
+  }, [contacts, matchStatus]);
 
   const handleImport = async () => {
     if (Platform.OS === 'web') {
@@ -105,8 +116,6 @@ export default function HomeScreen() {
           const newContact: Contact = {
             id: uuid(),
             name: first.givenName || first.displayName || 'Unnamed',
-            phone: first.phoneNumbers?.[0]?.number,
-            email: first.emailAddresses?.[0]?.email,
             tags: ['imported'],
           };
           const updated = [...contacts, newContact];
@@ -121,75 +130,19 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <DrawerLayout
-        ref={drawer}
-        drawerWidth={180}
-        renderNavigationView={() => (
-          <TagPane tags={allTags} active={selectedTags} toggle={toggleTag} />
-        )}
-      >
-        <View style={styles.container}>
-          <TextInput
-            style={[
-              styles.search,
-              { marginTop: insets.top + 8, width: width - 32 },
-            ]}
-            placeholder="Search contacts..."
-            value={search}
-            onChangeText={setSearch}
-          />
-          <View style={styles.stack}>
-            {ordered.map((contact, idx) => (
-              <ContactCard
-                key={contact.id}
-                contact={contact}
-              expanded={expanded === contact.id}
-              onExpand={() => setExpanded(contact.id)}
-              onClose={() => setExpanded(null)}
-              match={matchStatus(contact)}
-              index={idx}
-            />
-          ))}
-          </View>
-          <TouchableOpacity
-            style={[styles.fab, styles.add, { bottom: insets.bottom + 20 }]}
-            onPress={() => {}}
-          >
-            <Text style={styles.fabText}>+</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.fab, styles.import, { bottom: insets.bottom + 20 }]}
-            onPress={handleImport}
-          >
-            <Text style={styles.fabText}>Import</Text>
-          </TouchableOpacity>
+      <View style={styles.row}>
+        <View style={styles.listContainer}>
+          <ContactList contacts={ordered} getMatch={matchStatus} />
         </View>
-      </DrawerLayout>
+        <TagPane tags={allTags} active={selectedTags} toggle={toggleTag} />
+      </View>
+      <FABMenu onImport={handleImport} />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#fff' },
-  container: { flex: 1 },
-  search: {
-    borderColor: '#ccc',
-    borderWidth: 1,
-    marginHorizontal: 16,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  stack: {
-    flex: 1,
-  },
-  fab: {
-    position: 'absolute',
-    padding: 12,
-    borderRadius: 24,
-    backgroundColor: '#6ECEDB',
-  },
-  add: { left: 20 },
-  import: { right: 20 },
-  fabText: { color: 'white', fontSize: 18 },
+  row: { flex: 1, flexDirection: 'row' },
+  listContainer: { flex: 1 },
 });
