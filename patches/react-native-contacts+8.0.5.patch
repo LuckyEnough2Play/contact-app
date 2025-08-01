@@ -43,10 +43,18 @@ index 061f46b..44fb63e 100644
          Activity currentActivity = getCurrentActivity();
          if (currentActivity == null) {
 diff --git a/node_modules/react-native-contacts/android/src/newarch/com/rt2zz/reactnativecontacts/ContactsManager.java b/node_modules/react-native-contacts/android/src/newarch/com/rt2zz/reactnativecontacts/ContactsManager.java
-index 78f5e0e..5d00ae9 100644
+index 78f5e0e..97fe10c 100644
 --- a/node_modules/react-native-contacts/android/src/newarch/com/rt2zz/reactnativecontacts/ContactsManager.java
 +++ b/node_modules/react-native-contacts/android/src/newarch/com/rt2zz/reactnativecontacts/ContactsManager.java
-@@ -214,6 +214,47 @@ public class ContactsManager extends NativeContactsSpec implements ActivityEvent
+@@ -11,6 +11,7 @@ import com.facebook.react.bridge.ActivityEventListener;
+ import com.facebook.react.bridge.Promise;
+ import com.facebook.react.bridge.ReactApplicationContext;
+ import com.facebook.react.bridge.ReadableMap;
++import com.facebook.react.bridge.ReadableArray;
+ import com.rt2zz.reactnativecontacts.impl.ContactsManagerImpl;
+ 
+ import java.io.ByteArrayOutputStream;
+@@ -214,6 +215,47 @@ public class ContactsManager extends NativeContactsSpec implements ActivityEvent
          contactsManagerImpl.requestPermission(promise);
      }
  
