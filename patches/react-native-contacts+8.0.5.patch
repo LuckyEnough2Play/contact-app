@@ -1,0 +1,148 @@
+diff --git a/node_modules/react-native-contacts/android/src/main/java/com/rt2zz/reactnativecontacts/impl/ContactsManagerImpl.java b/node_modules/react-native-contacts/android/src/main/java/com/rt2zz/reactnativecontacts/impl/ContactsManagerImpl.java
+index 061f46b..44fb63e 100644
+--- a/node_modules/react-native-contacts/android/src/main/java/com/rt2zz/reactnativecontacts/impl/ContactsManagerImpl.java
++++ b/node_modules/react-native-contacts/android/src/main/java/com/rt2zz/reactnativecontacts/impl/ContactsManagerImpl.java
+@@ -1134,6 +1134,39 @@ public class ContactsManagerImpl {
+         // this method is only needed for iOS
+     }
+ 
++    // Group related methods are currently not supported on Android.
++    public void getGroups(Promise promise) {
++        promise.reject("E_UNSUPPORTED_OPERATION", "getGroups is not available on Android");
++    }
++
++    public void getGroup(String identifier, Promise promise) {
++        promise.reject("E_UNSUPPORTED_OPERATION", "getGroup is not available on Android");
++    }
++
++    public void deleteGroup(String identifier, Promise promise) {
++        promise.reject("E_UNSUPPORTED_OPERATION", "deleteGroup is not available on Android");
++    }
++
++    public void updateGroup(String identifier, ReadableMap groupData, Promise promise) {
++        promise.reject("E_UNSUPPORTED_OPERATION", "updateGroup is not available on Android");
++    }
++
++    public void addGroup(ReadableMap group, Promise promise) {
++        promise.reject("E_UNSUPPORTED_OPERATION", "addGroup is not available on Android");
++    }
++
++    public void contactsInGroup(String identifier, Promise promise) {
++        promise.reject("E_UNSUPPORTED_OPERATION", "contactsInGroup is not available on Android");
++    }
++
++    public void addContactsToGroup(String groupIdentifier, ReadableArray contactIdentifiers, Promise promise) {
++        promise.reject("E_UNSUPPORTED_OPERATION", "addContactsToGroup is not available on Android");
++    }
++
++    public void removeContactsFromGroup(String groupIdentifier, ReadableArray contactIdentifiers, Promise promise) {
++        promise.reject("E_UNSUPPORTED_OPERATION", "removeContactsFromGroup is not available on Android");
++    }
++
+     private void requestReadContactsPermission(Promise promise) {
+         Activity currentActivity = getCurrentActivity();
+         if (currentActivity == null) {
+diff --git a/node_modules/react-native-contacts/android/src/newarch/com/rt2zz/reactnativecontacts/ContactsManager.java b/node_modules/react-native-contacts/android/src/newarch/com/rt2zz/reactnativecontacts/ContactsManager.java
+index 78f5e0e..5d00ae9 100644
+--- a/node_modules/react-native-contacts/android/src/newarch/com/rt2zz/reactnativecontacts/ContactsManager.java
++++ b/node_modules/react-native-contacts/android/src/newarch/com/rt2zz/reactnativecontacts/ContactsManager.java
+@@ -214,6 +214,47 @@ public class ContactsManager extends NativeContactsSpec implements ActivityEvent
+         contactsManagerImpl.requestPermission(promise);
+     }
+ 
++    // Group related methods - not supported on Android
++    @Override
++    public void getGroups(Promise promise) {
++        contactsManagerImpl.getGroups(promise);
++    }
++
++    @Override
++    public void getGroup(String identifier, Promise promise) {
++        contactsManagerImpl.getGroup(identifier, promise);
++    }
++
++    @Override
++    public void deleteGroup(String identifier, Promise promise) {
++        contactsManagerImpl.deleteGroup(identifier, promise);
++    }
++
++    @Override
++    public void updateGroup(String identifier, ReadableMap groupData, Promise promise) {
++        contactsManagerImpl.updateGroup(identifier, groupData, promise);
++    }
++
++    @Override
++    public void addGroup(ReadableMap group, Promise promise) {
++        contactsManagerImpl.addGroup(group, promise);
++    }
++
++    @Override
++    public void contactsInGroup(String identifier, Promise promise) {
++        contactsManagerImpl.contactsInGroup(identifier, promise);
++    }
++
++    @Override
++    public void addContactsToGroup(String groupIdentifier, ReadableArray contactIdentifiers, Promise promise) {
++        contactsManagerImpl.addContactsToGroup(groupIdentifier, contactIdentifiers, promise);
++    }
++
++    @Override
++    public void removeContactsFromGroup(String groupIdentifier, ReadableArray contactIdentifiers, Promise promise) {
++        contactsManagerImpl.removeContactsFromGroup(groupIdentifier, contactIdentifiers, promise);
++    }
++
+     /*
+      * Enable note usage
+      */
+diff --git a/node_modules/react-native-contacts/android/src/oldarch/com/rt2zz/reactnativecontacts/ContactsManager.java b/node_modules/react-native-contacts/android/src/oldarch/com/rt2zz/reactnativecontacts/ContactsManager.java
+index 769beac..bae3b0a 100644
+--- a/node_modules/react-native-contacts/android/src/oldarch/com/rt2zz/reactnativecontacts/ContactsManager.java
++++ b/node_modules/react-native-contacts/android/src/oldarch/com/rt2zz/reactnativecontacts/ContactsManager.java
+@@ -215,6 +215,47 @@ public class ContactsManager extends ReactContextBaseJavaModule implements Activ
+         contactsManagerImpl.requestPermission(promise);
+     }
+ 
++    // Group related methods - not supported on Android
++    @ReactMethod
++    public void getGroups(Promise promise) {
++        contactsManagerImpl.getGroups(promise);
++    }
++
++    @ReactMethod
++    public void getGroup(String identifier, Promise promise) {
++        contactsManagerImpl.getGroup(identifier, promise);
++    }
++
++    @ReactMethod
++    public void deleteGroup(String identifier, Promise promise) {
++        contactsManagerImpl.deleteGroup(identifier, promise);
++    }
++
++    @ReactMethod
++    public void updateGroup(String identifier, ReadableMap groupData, Promise promise) {
++        contactsManagerImpl.updateGroup(identifier, groupData, promise);
++    }
++
++    @ReactMethod
++    public void addGroup(ReadableMap group, Promise promise) {
++        contactsManagerImpl.addGroup(group, promise);
++    }
++
++    @ReactMethod
++    public void contactsInGroup(String identifier, Promise promise) {
++        contactsManagerImpl.contactsInGroup(identifier, promise);
++    }
++
++    @ReactMethod
++    public void addContactsToGroup(String groupIdentifier, ReadableArray contactIdentifiers, Promise promise) {
++        contactsManagerImpl.addContactsToGroup(groupIdentifier, contactIdentifiers, promise);
++    }
++
++    @ReactMethod
++    public void removeContactsFromGroup(String groupIdentifier, ReadableArray contactIdentifiers, Promise promise) {
++        contactsManagerImpl.removeContactsFromGroup(groupIdentifier, contactIdentifiers, promise);
++    }
++
+     /*
+      * Enable note usage
+      */
