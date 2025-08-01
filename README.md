@@ -10,6 +10,11 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npm install
    ```
 
+   The project uses [patch-package](https://github.com/ds300/patch-package) to
+   apply fixes to some dependencies. The patches should be applied automatically
+   after installation, but if you ever run into build errors related to missing
+   native methods, run `npx patch-package` to ensure the patches are applied.
+
 2. Start the app
 
    ```bash
