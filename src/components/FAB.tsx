@@ -1,16 +1,17 @@
 import React from 'react';
-import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 interface Props {
   onPress: () => void;
-  icon?: string;
+  icon?: React.ComponentProps<typeof Ionicons>['name'];
 }
 
-export default function FAB({ onPress, icon = '+' }: Props) {
+export default function FAB({ onPress, icon = 'add' }: Props) {
   return (
     <View style={styles.container} pointerEvents="box-none">
       <TouchableOpacity style={styles.fab} onPress={onPress}>
-        <Text style={styles.fabText}>{icon}</Text>
+        <Ionicons name={icon} size={28} color="#fff" />
       </TouchableOpacity>
     </View>
   );
@@ -30,10 +31,5 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  fabText: {
-    color: '#fff',
-    fontSize: 28,
-    lineHeight: 28,
   },
 });

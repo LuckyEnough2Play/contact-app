@@ -165,7 +165,7 @@ export default function NewContactScreen() {
         <Button title="Delete" color="red" onPress={handleDelete} />
       )}
     </ScrollView>
-    <FAB icon="\u2190" onPress={() => router.back()} />
+    <FAB icon="arrow-back" onPress={() => router.back()} />
   </View>
   );
 }
