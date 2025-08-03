@@ -57,8 +57,8 @@ export default function HomeScreen() {
   );
 
   const sortByName = (a: Contact, b: Contact) =>
-    a.firstName.localeCompare(b.firstName) ||
-    a.lastName.localeCompare(b.lastName);
+    (a.firstName || '').localeCompare(b.firstName || '') ||
+    (a.lastName || '').localeCompare(b.lastName || '');
 
   const searchFiltered = useMemo(() => {
     const term = search.trim().toLowerCase();
