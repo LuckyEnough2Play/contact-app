@@ -1,7 +1,10 @@
 export interface Contact {
   id: string;
-  name: string;
-  phone?: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
   email?: string;
+  birthday?: string; // ISO string
+  company?: string;
   tags: string[];
 }

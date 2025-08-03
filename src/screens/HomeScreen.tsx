@@ -1,59 +1,26 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Platform, StyleSheet, View, TextInput } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { StyleSheet, View, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import 'react-native-get-random-values';
-import { v4 as uuid } from 'uuid';
+import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 
 import ContactList from '../components/ContactList';
 import TagPane from '../components/TagPane';
-import FABMenu from '../components/FABMenu';
+import FAB from '../components/FAB';
 import { loadContacts, saveContacts } from '../lib/storage';
 import { Contact } from '../lib/types';
-
-const names = [
-  'Alice Johnson',
-  'Bob Smith',
-  'Carol Williams',
-  'David Brown',
-  'Eve Davis',
-  'Frank Miller',
-  'Grace Wilson',
-  'Heidi Moore',
-  'Ivan Taylor',
-  'Judy Anderson',
-  'Kevin Thomas',
-  'Laura Jackson',
-  'Mallory White',
-  'Niaj Harris',
-  'Olivia Martin',
-  'Peggy Thompson',
-  'Quentin Garcia',
-  'Rupert Martinez',
-  'Sybil Robinson',
-  'Trent Clark',
-];
-
-const tagPool = ['Work', 'Family', 'Friends', 'Gym', 'Clients', 'Urgent'];
-
-function randomTags(): string[] {
-  const count = Math.floor(Math.random() * 3) + 1;
-  const shuffled = [...tagPool].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
-}
+import { generateSeedContacts } from '../lib/seed';
 
 export default function HomeScreen() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [search, setSearch] = useState('');
+  const router = useRouter();
 
-  useEffect(() => {
+  const load = useCallback(() => {
     loadContacts().then((data) => {
       if (data.length === 0) {
-        const dummy = names.map((name) => ({
-          id: uuid(),
-          name,
-          tags: randomTags(),
-        }));
+        const dummy = generateSeedContacts();
         setContacts(dummy);
         saveContacts(dummy);
       } else {
@@ -61,6 +28,12 @@ export default function HomeScreen() {
       }
     });
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
@@ -72,8 +45,10 @@ export default function HomeScreen() {
 
   const matchStatus = useCallback(
     (c: Contact): 'full' | 'partial' | 'none' => {
-      if (selectedTags.length === 0) return 'full';
-      const hasAll = selectedTags.every((t) => c.tags.includes(t));
+      if (selectedTags.length === 0) return 'partial';
+      const hasAll =
+        selectedTags.every((t) => c.tags.includes(t)) &&
+        c.tags.length === selectedTags.length;
       if (hasAll) return 'full';
       const hasSome = selectedTags.some((t) => c.tags.includes(t));
       return hasSome ? 'partial' : 'none';
@@ -81,14 +56,17 @@ export default function HomeScreen() {
     [selectedTags]
   );
 
-  const sortByName = (a: Contact, b: Contact) => a.name.localeCompare(b.name);
+  const sortByName = (a: Contact, b: Contact) =>
+    `${a.lastName} ${a.firstName}`.localeCompare(
+      `${b.lastName} ${b.firstName}`
+    );
 
   const searchFiltered = useMemo(() => {
     const term = search.trim().toLowerCase();
     if (!term) return contacts;
     return contacts.filter(
       (c) =>
-        c.name.toLowerCase().includes(term) ||
+        `${c.firstName} ${c.lastName}`.toLowerCase().includes(term) ||
         c.tags.some((t) => t.toLowerCase().includes(term))
     );
   }, [contacts, search]);
@@ -111,32 +89,12 @@ export default function HomeScreen() {
     ];
   }, [searchFiltered, matchStatus]);
 
-  const handleImport = async () => {
-    if (Platform.OS === 'web') {
-      console.warn('Import not supported on web');
-      return;
-    }
+  const handleAdd = () => {
+    router.push('/new');
+  };
 
-    try {
-      const Contacts = (await import('react-native-contacts')).default;
-      const permission = await Contacts.requestPermission();
-      if (permission === 'authorized') {
-        const picked = await Contacts.getAll();
-        if (picked && picked.length > 0) {
-          const first = picked[0];
-          const newContact: Contact = {
-            id: uuid(),
-            name: first.givenName || first.displayName || 'Unnamed',
-            tags: ['imported'],
-          };
-          const updated = [...contacts, newContact];
-          setContacts(updated);
-          saveContacts(updated);
-        }
-      }
-    } catch (e) {
-      console.warn('Import failed', e);
-    }
+  const handlePressContact = (c: Contact) => {
+    router.push(`/contact/${c.id}`);
   };
 
   return (
@@ -148,12 +106,16 @@ export default function HomeScreen() {
         onChangeText={setSearch}
       />
       <View style={styles.listContainer}>
-        <ContactList contacts={ordered} getMatch={matchStatus} />
+        <ContactList
+          contacts={ordered}
+          getMatch={matchStatus}
+          onPress={handlePressContact}
+        />
       </View>
       <View style={styles.tagPaneWrapper}>
         <TagPane tags={allTags} active={selectedTags} toggle={toggleTag} />
       </View>
-      <FABMenu onImport={handleImport} />
+      <FAB onPress={handleAdd} />
     </SafeAreaView>
   );
 }

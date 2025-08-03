@@ -1,22 +1,24 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 
 import { Contact } from '../lib/types';
 
 interface Props {
   contact: Contact;
   match: 'full' | 'partial' | 'none';
+  onPress?: () => void;
 }
 
-export default function ContactCard({ contact, match }: Props) {
+export default function ContactCard({ contact, match, onPress }: Props) {
   const background =
-    match === 'full' ? 'gold' : match === 'partial' ? '#ADD8E6' : '#D3D3D3';
-  const [first, ...rest] = contact.name.split(' ');
-  const last = rest.join(' ');
+    match === 'full' ? '#FFD700' : match === 'partial' ? '#03A9F4' : '#D3D3D3';
   return (
-    <View style={[styles.card, { backgroundColor: background }]}>
-      <Text style={styles.name}>{`${first}, ${last}`}</Text>
-    </View>
+    <TouchableOpacity
+      style={[styles.card, { backgroundColor: background }]}
+      onPress={onPress}
+    >
+      <Text style={styles.name}>{`${contact.firstName}, ${contact.lastName}`}</Text>
+    </TouchableOpacity>
   );
 }
 
