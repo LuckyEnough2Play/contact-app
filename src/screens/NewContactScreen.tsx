@@ -13,6 +13,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { v4 as uuid } from 'uuid';
+import * as DeviceContacts from 'expo-contacts';
 
 import { Contact } from '../lib/types';
 import { loadContacts, saveContacts } from '../lib/storage';
@@ -32,6 +33,7 @@ export default function NewContactScreen() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [showDate, setShowDate] = useState(false);
+  const [importQueue, setImportQueue] = useState<DeviceContacts.Contact[]>([]);
 
   useEffect(() => {
     loadContacts().then((data) => {
@@ -69,6 +71,40 @@ export default function NewContactScreen() {
     setTagInput('');
   };
 
+  const populateFromDeviceContact = (c: DeviceContacts.Contact) => {
+    setFirstName(c.firstName || '');
+    setLastName(c.lastName || '');
+    setPhone(c.phoneNumbers?.[0]?.number || '');
+    setEmail(c.emails?.[0]?.email || '');
+    if (c.birthday && (c.birthday.day || c.birthday.month || c.birthday.year)) {
+      const year = c.birthday.year ?? new Date().getFullYear();
+      const month = (c.birthday.month ?? 1) - 1;
+      const day = c.birthday.day ?? 1;
+      setBirthday(new Date(year, month, day).toISOString());
+    } else {
+      setBirthday(undefined);
+    }
+    setCompany(c.company || '');
+    setSelectedTags([]);
+  };
+
+  const handleImport = async () => {
+    const { status } = await DeviceContacts.requestPermissionsAsync();
+    if (status !== 'granted') return;
+    const picked: DeviceContacts.Contact[] = [];
+    // allow selecting multiple contacts sequentially
+    // user cancels picker to finish selection
+    while (true) {
+      const contact = await DeviceContacts.presentContactPickerAsync();
+      if (!contact) break;
+      picked.push(contact);
+    }
+    if (picked.length === 0) return;
+    const [first, ...rest] = picked;
+    setImportQueue(rest);
+    populateFromDeviceContact(first);
+  };
+
   const handleSave = async () => {
     const contact: Contact = {
       id: id || uuid(),
@@ -87,6 +123,12 @@ export default function NewContactScreen() {
       updated = [...contacts, contact];
     }
     await saveContacts(updated);
+    if (importQueue.length > 0) {
+      const [next, ...rest] = importQueue;
+      setImportQueue(rest);
+      populateFromDeviceContact(next);
+      return;
+    }
     router.back();
   };
 
@@ -187,6 +229,7 @@ export default function NewContactScreen() {
         </View>
       </View>
       <Button title="Save" onPress={handleSave} />
+      {!id && <Button title="Import" onPress={handleImport} />}
       {id && (
         <Button title="Delete" color="red" onPress={handleDelete} />
       )}
