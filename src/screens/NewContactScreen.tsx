@@ -96,6 +96,8 @@ export default function NewContactScreen() {
     // user cancels picker to finish selection
     while (true) {
       const contact = await DeviceContacts.presentContactPickerAsync();
+      // ensure we return to our app after the picker closes
+      await Linking.openURL('contactapp://');
       if (!contact) break;
       picked.push(contact);
     }
