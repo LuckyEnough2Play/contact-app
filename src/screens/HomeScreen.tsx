@@ -41,7 +41,29 @@ export default function HomeScreen() {
     );
   };
 
-  const allTags = Array.from(new Set(contacts.flatMap((c) => c.tags)));
+  const removeTag = (tag: string) => {
+    setContacts((prev) => {
+      const updated = prev.map((c) => ({
+        ...c,
+        tags: c.tags.filter((t) => t !== tag),
+      }));
+      saveContacts(updated);
+      return updated;
+    });
+    setSelectedTags((prev) => prev.filter((t) => t !== tag));
+  };
+
+  const tagCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const c of contacts) {
+      for (const t of c.tags) {
+        counts[t] = (counts[t] || 0) + 1;
+      }
+    }
+    return Object.keys(counts)
+      .sort((a, b) => a.localeCompare(b))
+      .map((name) => ({ name, count: counts[name] }));
+  }, [contacts]);
 
   const matchStatus = useCallback(
     (c: Contact): 'full' | 'partial' | 'none' => {
@@ -112,7 +134,12 @@ export default function HomeScreen() {
         />
       </View>
       <View style={styles.tagPaneWrapper}>
-        <TagPane tags={allTags} active={selectedTags} toggle={toggleTag} />
+        <TagPane
+          tags={tagCounts}
+          active={selectedTags}
+          toggle={toggleTag}
+          remove={removeTag}
+        />
       </View>
       <FAB onPress={handleAdd} />
     </SafeAreaView>
