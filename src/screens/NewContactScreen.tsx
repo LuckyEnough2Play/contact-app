@@ -192,14 +192,14 @@ const styles = StyleSheet.create({
   sectionTitle: { fontWeight: 'bold', marginBottom: 8 },
   tagsContainer: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 8 },
   tag: {
-    backgroundColor: '#ccc',
+    backgroundColor: '#03A9F4',
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 16,
     marginRight: 8,
     marginBottom: 8,
   },
-  selectedTag: { backgroundColor: '#03A9F4' },
+  selectedTag: { backgroundColor: '#FFD700' },
   tagText: { color: '#fff' },
   tagInputRow: {
     flexDirection: 'row',

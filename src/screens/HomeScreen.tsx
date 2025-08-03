@@ -1,11 +1,20 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, View, TextInput, TouchableOpacity, Text } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  StyleSheet,
+  View,
+  TextInput,
+  TouchableOpacity,
+  Text,
+  LayoutAnimation,
+  Platform,
+  UIManager,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 
 import ContactList from '../components/ContactList';
-import TagPane from '../components/TagPane';
+import TagPane, { TagInfo } from '../components/TagPane';
 import { loadContacts, saveContacts } from '../lib/storage';
 import { Contact } from '../lib/types';
 import { generateSeedContacts } from '../lib/seed';
@@ -15,6 +24,12 @@ export default function HomeScreen() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const router = useRouter();
+
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      UIManager.setLayoutAnimationEnabledExperimental?.(true);
+    }
+  }, []);
 
   const load = useCallback(() => {
     loadContacts().then((data) => {
@@ -35,6 +50,7 @@ export default function HomeScreen() {
   );
 
   const toggleTag = (tag: string) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setSelectedTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
@@ -52,21 +68,33 @@ export default function HomeScreen() {
     setSelectedTags((prev) => prev.filter((t) => t !== tag));
   };
 
-  const tagCounts = useMemo(() => {
+  const tagCounts = useMemo<TagInfo[]>(() => {
     const counts: Record<string, number> = {};
     for (const c of contacts) {
       for (const t of c.tags) {
         counts[t] = (counts[t] || 0) + 1;
       }
     }
-    return Object.keys(counts)
-      .sort((a, b) => a.localeCompare(b))
-      .map((name) => ({ name, count: counts[name] }));
-  }, [contacts]);
+    return Object.keys(counts).map((name) => {
+      const isSelected = selectedTags.includes(name);
+      let status: TagInfo['status'];
+      if (isSelected) {
+        status = 'selected';
+      } else {
+        const relevant = contacts.some(
+          (c) =>
+            c.tags.includes(name) &&
+            selectedTags.every((t) => c.tags.includes(t))
+        );
+        status = relevant ? 'relevant' : 'irrelevant';
+      }
+      return { name, count: counts[name], status };
+    });
+  }, [contacts, selectedTags]);
 
   const matchStatus = useCallback(
     (c: Contact): 'full' | 'partial' | 'none' => {
-      if (selectedTags.length === 0) return 'none';
+      if (selectedTags.length === 0) return 'partial';
       const hasAll =
         selectedTags.every((t) => c.tags.includes(t)) &&
         c.tags.length === selectedTags.length;
@@ -138,12 +166,7 @@ export default function HomeScreen() {
         />
       </View>
       <View style={styles.tagPaneWrapper}>
-        <TagPane
-          tags={tagCounts}
-          active={selectedTags}
-          toggle={toggleTag}
-          remove={removeTag}
-        />
+        <TagPane tags={tagCounts} toggle={toggleTag} remove={removeTag} />
       </View>
     </SafeAreaView>
   );

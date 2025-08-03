@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Modal,
   ScrollView,
@@ -8,19 +8,19 @@ import {
   View,
 } from 'react-native';
 
-interface TagInfo {
+export interface TagInfo {
   name: string;
   count: number;
+  status: 'selected' | 'relevant' | 'irrelevant';
 }
 
 interface Props {
   tags: TagInfo[];
-  active: string[];
   toggle: (tag: string) => void;
   remove: (tag: string) => void;
 }
 
-export default function TagPane({ tags, active, toggle, remove }: Props) {
+export default function TagPane({ tags, toggle, remove }: Props) {
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
 
   const closeModal = () => setPendingDelete(null);
@@ -31,6 +31,15 @@ export default function TagPane({ tags, active, toggle, remove }: Props) {
     }
   };
 
+  const sorted = useMemo(() => {
+    return [...tags].sort((a, b) => {
+      const order = (s: TagInfo['status']) =>
+        s === 'selected' ? 0 : s === 'relevant' ? 1 : 2;
+      const diff = order(a.status) - order(b.status);
+      return diff !== 0 ? diff : a.name.localeCompare(b.name);
+    });
+  }, [tags]);
+
   return (
     <>
       <ScrollView
@@ -38,10 +47,14 @@ export default function TagPane({ tags, active, toggle, remove }: Props) {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator
       >
-        {tags.map((t) => (
+        {sorted.map((t) => (
           <TouchableOpacity
             key={t.name}
-            style={[styles.tag, active.includes(t.name) && styles.active]}
+            style={[
+              styles.tag,
+              t.status === 'selected' && styles.selected,
+              t.status === 'irrelevant' && styles.irrelevant,
+            ]}
             onPress={() => toggle(t.name)}
             onLongPress={() => setPendingDelete(t.name)}
           >
@@ -87,15 +100,18 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   tag: {
-    backgroundColor: '#ccc',
+    backgroundColor: '#03A9F4',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
     marginRight: 8,
     marginBottom: 8,
   },
-  active: {
-    backgroundColor: '#6ECEDB',
+  selected: {
+    backgroundColor: '#FFD700',
+  },
+  irrelevant: {
+    backgroundColor: '#D3D3D3',
   },
   text: {
     color: '#fff',
