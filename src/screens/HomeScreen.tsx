@@ -45,7 +45,7 @@ export default function HomeScreen() {
 
   const matchStatus = useCallback(
     (c: Contact): 'full' | 'partial' | 'none' => {
-      if (selectedTags.length === 0) return 'partial';
+      if (selectedTags.length === 0) return 'none';
       const hasAll =
         selectedTags.every((t) => c.tags.includes(t)) &&
         c.tags.length === selectedTags.length;
@@ -57,9 +57,8 @@ export default function HomeScreen() {
   );
 
   const sortByName = (a: Contact, b: Contact) =>
-    `${a.lastName} ${a.firstName}`.localeCompare(
-      `${b.lastName} ${b.firstName}`
-    );
+    a.firstName.localeCompare(b.firstName) ||
+    a.lastName.localeCompare(b.lastName);
 
   const searchFiltered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -94,7 +93,7 @@ export default function HomeScreen() {
   };
 
   const handlePressContact = (c: Contact) => {
-    router.push(`/contact/${c.id}`);
+    router.push(`/new?id=${c.id}`);
   };
 
   return (

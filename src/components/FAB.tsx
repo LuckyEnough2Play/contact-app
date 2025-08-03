@@ -3,13 +3,14 @@ import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 
 interface Props {
   onPress: () => void;
+  icon?: string;
 }
 
-export default function FAB({ onPress }: Props) {
+export default function FAB({ onPress, icon = '+' }: Props) {
   return (
     <View style={styles.container} pointerEvents="box-none">
       <TouchableOpacity style={styles.fab} onPress={onPress}>
-        <Text style={styles.fabText}>+</Text>
+        <Text style={styles.fabText}>{icon}</Text>
       </TouchableOpacity>
     </View>
   );

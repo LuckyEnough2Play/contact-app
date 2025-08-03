@@ -6,6 +6,7 @@ import { v4 as uuid } from 'uuid';
 
 import { Contact } from '../lib/types';
 import { loadContacts, saveContacts } from '../lib/storage';
+import FAB from '../components/FAB';
 
 export default function NewContactScreen() {
   const router = useRouter();
@@ -79,8 +80,15 @@ export default function NewContactScreen() {
     router.back();
   };
 
+  const handleDelete = async () => {
+    if (!id) return;
+    await saveContacts(contacts.filter((c) => c.id !== id));
+    router.back();
+  };
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <View style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={styles.container}>
       <TextInput
         style={styles.input}
         placeholder="First Name"
@@ -153,7 +161,12 @@ export default function NewContactScreen() {
         </View>
       </View>
       <Button title="Save" onPress={handleSave} />
+      {id && (
+        <Button title="Delete" color="red" onPress={handleDelete} />
+      )}
     </ScrollView>
+    <FAB icon="\u2190" onPress={() => router.back()} />
+  </View>
   );
 }
 
