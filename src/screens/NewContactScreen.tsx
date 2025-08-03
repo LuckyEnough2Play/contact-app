@@ -126,13 +126,21 @@ export default function NewContactScreen() {
           <MaterialIcons name="call" size={24} color="#000" />
         </TouchableOpacity>
       </View>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-      />
+      <View style={styles.emailRow}>
+        <TextInput
+          style={[styles.input, styles.emailInput]}
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+        />
+        <TouchableOpacity
+          onPress={() => Linking.openURL(`mailto:${email}`)}
+          style={styles.emailButton}
+        >
+          <MaterialIcons name="email" size={24} color="#000" />
+        </TouchableOpacity>
+      </View>
       <TouchableOpacity onPress={() => setShowDate(true)} style={styles.dateButton}>
         <Text style={styles.dateButtonText}>
           {birthday ? new Date(birthday).toLocaleDateString() : 'Set Birthday'}
@@ -208,6 +216,19 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   callButton: {
+    marginLeft: 8,
+    padding: 8,
+  },
+  emailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  emailInput: {
+    flex: 1,
+    marginBottom: 0,
+  },
+  emailButton: {
     marginLeft: 8,
     padding: 8,
   },
