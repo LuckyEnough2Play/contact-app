@@ -1,5 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { View, TextInput, Button, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import {
+  View,
+  TextInput,
+  Button,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  Linking,
+} from 'react-native';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { v4 as uuid } from 'uuid';
@@ -101,13 +111,21 @@ export default function NewContactScreen() {
         value={lastName}
         onChangeText={setLastName}
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Phone"
-        value={phone}
-        onChangeText={setPhone}
-        keyboardType="phone-pad"
-      />
+      <View style={styles.phoneRow}>
+        <TextInput
+          style={[styles.input, styles.phoneInput]}
+          placeholder="Phone"
+          value={phone}
+          onChangeText={setPhone}
+          keyboardType="phone-pad"
+        />
+        <TouchableOpacity
+          onPress={() => Linking.openURL(`tel:${phone}`)}
+          style={styles.callButton}
+        >
+          <MaterialIcons name="call" size={24} color="#000" />
+        </TouchableOpacity>
+      </View>
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -179,6 +197,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     marginBottom: 12,
+  },
+  phoneRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  phoneInput: {
+    flex: 1,
+    marginBottom: 0,
+  },
+  callButton: {
+    marginLeft: 8,
+    padding: 8,
   },
   dateButton: {
     borderColor: '#ccc',
