@@ -1,12 +1,11 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, View, TextInput } from 'react-native';
+import { StyleSheet, View, TextInput, TouchableOpacity, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 
 import ContactList from '../components/ContactList';
 import TagPane from '../components/TagPane';
-import FAB from '../components/FAB';
 import { loadContacts, saveContacts } from '../lib/storage';
 import { Contact } from '../lib/types';
 import { generateSeedContacts } from '../lib/seed';
@@ -120,12 +119,17 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <TextInput
-        style={styles.search}
-        placeholder="Search contacts..."
-        value={search}
-        onChangeText={setSearch}
-      />
+      <View style={styles.topBar}>
+        <TextInput
+          style={styles.search}
+          placeholder="Search contacts..."
+          value={search}
+          onChangeText={setSearch}
+        />
+        <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
+          <Text style={styles.addButtonText}>+</Text>
+        </TouchableOpacity>
+      </View>
       <View style={styles.listContainer}>
         <ContactList
           contacts={ordered}
@@ -141,21 +145,39 @@ export default function HomeScreen() {
           remove={removeTag}
         />
       </View>
-      <FAB onPress={handleAdd} />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#fff' },
-  search: {
-    borderColor: '#ccc',
-    borderWidth: 1,
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginHorizontal: 16,
     marginTop: 8,
+  },
+  search: {
+    flex: 1,
+    borderColor: '#ccc',
+    borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 6,
+    marginRight: 8,
+  },
+  addButton: {
+    backgroundColor: '#03A9F4',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addButtonText: {
+    color: '#fff',
+    fontSize: 28,
+    lineHeight: 28,
   },
   listContainer: { flex: 1 },
   tagPaneWrapper: { marginLeft: 16, marginBottom: 16 },
