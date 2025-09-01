@@ -21,8 +21,6 @@ devices.json
 # -----------------------------
 # 📱 Native (Android/iOS)
 # -----------------------------
-android/
-ios/
 android/.gradle/
 android/app/build/
 android/build/
@@ -39,6 +37,10 @@ ios/.DS_Store
 *.p12
 *.key
 *.mobileprovision
+
+# 🚫 Ignore keystore/secrets
+android/keystore.properties
+*.keystore
 
 # Native build artifacts
 *.apk
