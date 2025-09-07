@@ -140,7 +140,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
       <View style={styles.topBar}>
         <TextInput
           style={styles.search}

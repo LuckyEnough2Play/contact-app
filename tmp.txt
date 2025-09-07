@@ -9,7 +9,6 @@ import {
   StyleSheet,
   Linking,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -22,7 +21,6 @@ import FAB from '../components/FAB';
 
 export default function NewContactScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [firstName, setFirstName] = useState('');
@@ -127,20 +125,11 @@ export default function NewContactScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
-      <ScrollView
-        contentContainerStyle={[
-          styles.container,
-          { paddingBottom: 16 + Math.max(insets.bottom, 16) + 72 }, // keep content above FAB + home indicator
-        ]}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        contentInsetAdjustmentBehavior="automatic"
-      >
+    <View style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
       <TextInput
         style={styles.input}
         placeholder="First Name"
-        placeholderTextColor="#999"
         value={firstName}
         onChangeText={setFirstName}
         autoCapitalize="words"
@@ -148,7 +137,6 @@ export default function NewContactScreen() {
       <TextInput
         style={styles.input}
         placeholder="Last Name"
-        placeholderTextColor="#999"
         value={lastName}
         onChangeText={setLastName}
         autoCapitalize="words"
@@ -157,7 +145,6 @@ export default function NewContactScreen() {
         <TextInput
           style={[styles.input, styles.phoneInput]}
           placeholder="Phone"
-          placeholderTextColor="#999"
           value={phone}
           onChangeText={setPhone}
           keyboardType="phone-pad"
@@ -176,7 +163,6 @@ export default function NewContactScreen() {
         <TextInput
           style={[styles.input, styles.emailInput]}
           placeholder="Email"
-          placeholderTextColor="#999"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
@@ -210,7 +196,6 @@ export default function NewContactScreen() {
       <TextInput
         style={styles.input}
         placeholder="Company"
-        placeholderTextColor="#999"
         value={company}
         onChangeText={setCompany}
       />
@@ -231,7 +216,6 @@ export default function NewContactScreen() {
           <TextInput
             style={[styles.input, { flex: 1 }]}
             placeholder="Add tag"
-            placeholderTextColor="#999"
             value={tagInput}
             onChangeText={setTagInput}
           />
@@ -245,12 +229,11 @@ export default function NewContactScreen() {
       )}
     </ScrollView>
     <FAB icon="arrow-back" onPress={() => router.back()} />
-  </SafeAreaView>
+  </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#fff' },
   container: { padding: 16 },
   input: {
     borderColor: '#ccc',
@@ -259,8 +242,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     marginBottom: 12,
-    backgroundColor: '#fff',
-    color: '#111',
   },
   phoneRow: {
     flexDirection: 'row',

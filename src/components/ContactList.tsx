@@ -18,6 +18,7 @@ export default function ContactList({ contacts, getMatch, onPress }: Props) {
       initialNumToRender={12}
       windowSize={5}
       removeClippedSubviews
+      contentInsetAdjustmentBehavior="automatic"
       renderItem={({ item }) => (
         <ContactCard
           contact={item}
