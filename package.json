@@ -9,7 +9,10 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "postinstall": "patch-package"
+    "build:android": "eas build -p android --profile production",
+    "postinstall": "patch-package",
+    "sync:version": "node scripts/sync-version.mjs",
+    "eas-build-pre-install": "node scripts/sync-version.mjs"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
