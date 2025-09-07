@@ -229,13 +229,22 @@ export default function NewContactScreen() {
         </View>
         <View style={styles.tagInputRow}>
           <TextInput
-            style={[styles.input, { flex: 1 }]}
+            style={[styles.input, styles.tagTextInput]}
             placeholder="Add tag"
             placeholderTextColor="#999"
             value={tagInput}
             onChangeText={setTagInput}
+            returnKeyType="done"
+            onSubmitEditing={addTag}
           />
-          <Button title="Add" onPress={addTag} />
+          <TouchableOpacity
+            onPress={addTag}
+            style={styles.addTagButton}
+            accessibilityLabel="Add tag"
+          >
+            <MaterialIcons name="add" size={20} color="#fff" />
+            <Text style={styles.addTagButtonText}>Add</Text>
+          </TouchableOpacity>
         </View>
       </View>
       <Button title="Save" onPress={handleSave} />
@@ -313,5 +322,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
+  },
+  tagTextInput: {
+    flex: 1,
+    marginBottom: 0,
+  },
+  addTagButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#03A9F4',
+    paddingHorizontal: 12,
+    height: 40,
+    borderRadius: 8,
+    marginLeft: 8,
+  },
+  addTagButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    marginLeft: 6,
   },
 });
