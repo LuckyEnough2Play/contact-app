@@ -28,6 +28,7 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" />
             <Stack.Screen name="new" />
+            <Stack.Screen name="transfer" />
             <Stack.Screen name="+not-found" />
           </Stack>
           <StatusBar style="auto" />

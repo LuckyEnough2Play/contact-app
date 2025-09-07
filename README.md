@@ -53,3 +53,20 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+## Outlook Transfer (CSV)
+
+- Export: Home → tap the ⇄ button → "Export to Outlook CSV". Share or save the generated `contacts-outlook.csv`, then import it in Outlook (File → Open & Export → Import/Export → Import from another program or file → CSV).
+- Import: In Outlook, export contacts to CSV (File → Open & Export → Export to a file → CSV). In the app, Home → ⇄ → "Import from Outlook CSV" and pick the exported file. Existing contacts are matched by email or phone; matches are updated and tags (Outlook categories) are merged.
+
+Notes
+- CSV fields used: First Name, Last Name, E-mail Address, Mobile Phone, Company, Birthday, Categories.
+- Tags map to Outlook Categories (semicolon-separated in CSV).
+- Requires the following Expo packages: `expo-document-picker`, `expo-file-system`, `expo-sharing`.
+
+## Import from Outlook on Phone (No CSV)
+
+- Enable Outlook → device Contacts sync:
+  - Android: Outlook → profile icon → Settings → tap your account → enable "Sync contacts" (or "Save Contacts").
+  - iOS: Outlook → Settings → tap your account → enable "Save Contacts". Also ensure iOS Settings → Contacts → Accounts → your Outlook account is enabled.
+- In the app: Home → ⇄ → "Import All from Device Contacts" to bulk‑import everything the phone sees. You can still import one contact at a time on the New Contact screen via the "Import" button.

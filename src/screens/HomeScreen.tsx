@@ -148,6 +148,9 @@ export default function HomeScreen() {
           value={search}
           onChangeText={setSearch}
         />
+        <TouchableOpacity style={[styles.iconButton, styles.transferButton]} onPress={() => router.push('/transfer')}>
+          <Text style={styles.iconButtonText}>⇄</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
           <Text style={styles.addButtonText}>+</Text>
         </TouchableOpacity>
@@ -190,6 +193,24 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  iconButton: {
+    backgroundColor: '#eee',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  transferButton: {
+    backgroundColor: '#8BC34A',
+  },
+  iconButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    lineHeight: 18,
+    fontWeight: 'bold',
   },
   addButtonText: {
     color: '#fff',
