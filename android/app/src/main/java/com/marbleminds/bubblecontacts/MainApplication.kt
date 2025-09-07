@@ -1,4 +1,4 @@
-package com.luckyenough2play.contactapp
+package com.marbleminds.bubblecontacts
 
 import android.app.Application
 import android.content.res.Configuration

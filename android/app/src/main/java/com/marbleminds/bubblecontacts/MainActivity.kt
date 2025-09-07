@@ -1,4 +1,4 @@
-package com.luckyenough2play.contactapp
+package com.marbleminds.bubblecontacts
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

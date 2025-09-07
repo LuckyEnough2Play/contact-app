@@ -2,7 +2,7 @@
   "expo": {
     "name": "contact-app",
     "slug": "contact-app",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "contactapp",
@@ -17,7 +17,19 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.marbleminds.bubblecontacts"
+      "package": "com.marbleminds.bubblecontacts",
+      "versionCode": 3,
+      "permissions": [
+        "android.permission.READ_CONTACTS",
+        "android.permission.VIBRATE"
+      ],
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "bundler": "metro",
