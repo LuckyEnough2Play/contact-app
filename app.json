@@ -17,7 +17,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.luckyenough2play.contactapp"
+      "package": "com.marbleminds.bubblecontacts"
     },
     "web": {
       "bundler": "metro",
