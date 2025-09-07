@@ -10,7 +10,7 @@ interface Props {
   onPress?: () => void;
 }
 
-export default function ContactCard({ contact, match, onPress }: Props) {
+function ContactCard({ contact, match, onPress }: Props) {
   const background =
     match === 'full' ? '#FFD700' : match === 'partial' ? '#03A9F4' : '#D3D3D3';
 
@@ -27,13 +27,15 @@ export default function ContactCard({ contact, match, onPress }: Props) {
     >
       <View style={styles.row}>
         <Text style={styles.name}>{`${contact.firstName}, ${contact.lastName}`}</Text>
-        <TouchableOpacity onPress={handleCall} style={styles.callButton}>
+        <TouchableOpacity onPress={handleCall} style={styles.callButton} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} accessibilityLabel={`Call ${contact.firstName} ${contact.lastName}`}>
           <MaterialIcons name="call" size={20} color="#000" />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
 }
+
+export default React.memo(ContactCard);
 
 const styles = StyleSheet.create({
   card: {

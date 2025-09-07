@@ -17,7 +17,6 @@ import ContactList from '../components/ContactList';
 import TagPane, { TagInfo } from '../components/TagPane';
 import { loadContacts, saveContacts } from '../lib/storage';
 import { Contact } from '../lib/types';
-import { generateSeedContacts } from '../lib/seed';
 
 export default function HomeScreen() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -33,13 +32,8 @@ export default function HomeScreen() {
 
   const load = useCallback(() => {
     loadContacts().then((data) => {
-      if (data.length === 0) {
-        const dummy = generateSeedContacts();
-        setContacts(dummy);
-        saveContacts(dummy);
-      } else {
-        setContacts(data);
-      }
+      // Do not seed placeholder contacts; keep empty until user adds/imports
+      setContacts(data);
     });
   }, []);
 
@@ -150,7 +144,7 @@ export default function HomeScreen() {
       <View style={styles.topBar}>
         <TextInput
           style={styles.search}
-          placeholder="Search contacts..."
+          placeholder={`Search from ${contacts.length} contacts`}
           value={search}
           onChangeText={setSearch}
         />

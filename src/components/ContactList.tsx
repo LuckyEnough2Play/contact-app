@@ -15,6 +15,9 @@ export default function ContactList({ contacts, getMatch, onPress }: Props) {
     <FlatList
       data={contacts}
       keyExtractor={(item) => item.id}
+      initialNumToRender={12}
+      windowSize={5}
+      removeClippedSubviews
       renderItem={({ item }) => (
         <ContactCard
           contact={item}

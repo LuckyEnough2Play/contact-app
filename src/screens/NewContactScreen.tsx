@@ -33,7 +33,7 @@ export default function NewContactScreen() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [showDate, setShowDate] = useState(false);
-  const [importQueue, setImportQueue] = useState<DeviceContacts.Contact[]>([]);
+  // Import flow simplified to single-pick to avoid navigation bounce
 
   useEffect(() => {
     loadContacts().then((data) => {
@@ -91,20 +91,10 @@ export default function NewContactScreen() {
   const handleImport = async () => {
     const { status } = await DeviceContacts.requestPermissionsAsync();
     if (status !== 'granted') return;
-    const picked: DeviceContacts.Contact[] = [];
-    // allow selecting multiple contacts sequentially
-    // user cancels picker to finish selection
-    while (true) {
-      const contact = await DeviceContacts.presentContactPickerAsync();
-      // ensure we return to our app after the picker closes
-      await Linking.openURL('contactapp://');
-      if (!contact) break;
-      picked.push(contact);
-    }
-    if (picked.length === 0) return;
-    const [first, ...rest] = picked;
-    setImportQueue(rest);
-    populateFromDeviceContact(first);
+    const contact = await DeviceContacts.presentContactPickerAsync();
+    if (!contact) return;
+    // Populate the form with the selected contact; user can Save to add
+    populateFromDeviceContact(contact);
   };
 
   const handleSave = async () => {
@@ -125,12 +115,6 @@ export default function NewContactScreen() {
       updated = [...contacts, contact];
     }
     await saveContacts(updated);
-    if (importQueue.length > 0) {
-      const [next, ...rest] = importQueue;
-      setImportQueue(rest);
-      populateFromDeviceContact(next);
-      return;
-    }
     router.back();
   };
 
@@ -142,18 +126,20 @@ export default function NewContactScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
       <TextInput
         style={styles.input}
         placeholder="First Name"
         value={firstName}
         onChangeText={setFirstName}
+        autoCapitalize="words"
       />
       <TextInput
         style={styles.input}
         placeholder="Last Name"
         value={lastName}
         onChangeText={setLastName}
+        autoCapitalize="words"
       />
       <View style={styles.phoneRow}>
         <TextInput
@@ -162,10 +148,13 @@ export default function NewContactScreen() {
           value={phone}
           onChangeText={setPhone}
           keyboardType="phone-pad"
+          autoCapitalize="none"
         />
         <TouchableOpacity
           onPress={() => Linking.openURL(`tel:${phone}`)}
           style={styles.callButton}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityLabel={phone ? `Call ${firstName} ${lastName}` : 'Call number'}
         >
           <MaterialIcons name="call" size={24} color="#000" />
         </TouchableOpacity>
@@ -177,10 +166,13 @@ export default function NewContactScreen() {
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
+          autoCapitalize="none"
         />
         <TouchableOpacity
           onPress={() => Linking.openURL(`mailto:${email}`)}
           style={styles.emailButton}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityLabel={email ? `Email ${firstName} ${lastName}` : 'Send email'}
         >
           <MaterialIcons name="email" size={24} color="#000" />
         </TouchableOpacity>
