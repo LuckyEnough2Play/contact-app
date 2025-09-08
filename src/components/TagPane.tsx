@@ -18,10 +18,16 @@ interface Props {
   tags: TagInfo[];
   toggle: (tag: string) => void;
   remove: (tag: string) => void;
+  height?: number;
 }
 
-export default function TagPane({ tags, toggle, remove }: Props) {
+import ScrollIndicator from './ScrollIndicator';
+
+export default function TagPane({ tags, toggle, remove, height }: Props) {
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+  const [viewportH, setViewportH] = useState(0);
+  const [contentH, setContentH] = useState(0);
+  const [offsetY, setOffsetY] = useState(0);
 
   const closeModal = () => setPendingDelete(null);
   const confirmDelete = () => {
@@ -40,13 +46,19 @@ export default function TagPane({ tags, toggle, remove }: Props) {
     });
   }, [tags]);
 
+  const wrapperStyle = height != null ? [styles.wrapperBase, { height }] : [styles.wrapperBase, styles.wrapperMax];
+
   return (
     <>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.container}
-        showsVerticalScrollIndicator
-      >
+      <View style={wrapperStyle as any} onLayout={(e) => setViewportH(e.nativeEvent.layout.height)}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.container}
+          showsVerticalScrollIndicator={false}
+          onContentSizeChange={(_, h) => setContentH(h)}
+          onScroll={(e) => setOffsetY(e.nativeEvent.contentOffset.y)}
+          scrollEventThrottle={16}
+        >
         {sorted.map((t) => (
           <TouchableOpacity
             key={t.name}
@@ -61,7 +73,9 @@ export default function TagPane({ tags, toggle, remove }: Props) {
             <Text style={styles.text}>{`${t.name} (${t.count})`}</Text>
           </TouchableOpacity>
         ))}
-      </ScrollView>
+        </ScrollView>
+        <ScrollIndicator viewportHeight={viewportH} contentHeight={contentH} scrollOffset={offsetY} />
+      </View>
       <Modal transparent visible={pendingDelete !== null} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -90,9 +104,9 @@ export default function TagPane({ tags, toggle, remove }: Props) {
 }
 
 const styles = StyleSheet.create({
-  scroll: {
-    maxHeight: 120,
-  },
+  wrapperBase: { position: 'relative' },
+  wrapperMax: { maxHeight: 120 },
+  scroll: {},
   container: {
     padding: 8,
     flexDirection: 'row',

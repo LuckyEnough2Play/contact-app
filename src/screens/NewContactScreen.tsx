@@ -19,6 +19,7 @@ import * as DeviceContacts from 'expo-contacts';
 import { Contact } from '../lib/types';
 import { loadContacts, saveContacts } from '../lib/storage';
 import FAB from '../components/FAB';
+import ScrollIndicator from '../components/ScrollIndicator';
 
 export default function NewContactScreen() {
   const router = useRouter();
@@ -35,6 +36,9 @@ export default function NewContactScreen() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [showDate, setShowDate] = useState(false);
+  const [viewportH, setViewportH] = useState(0);
+  const [contentH, setContentH] = useState(0);
+  const [offsetY, setOffsetY] = useState(0);
   // Import flow simplified to single-pick to avoid navigation bounce
 
   useEffect(() => {
@@ -128,6 +132,7 @@ export default function NewContactScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
+      <View style={{ flex: 1, position: 'relative' }} onLayout={(e) => setViewportH(e.nativeEvent.layout.height)}>
       <ScrollView
         contentContainerStyle={[
           styles.container,
@@ -136,6 +141,10 @@ export default function NewContactScreen() {
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
+        onContentSizeChange={(_, h) => setContentH(h)}
+        onScroll={(e) => setOffsetY(e.nativeEvent.contentOffset.y)}
+        scrollEventThrottle={16}
       >
       <TextInput
         style={styles.input}
@@ -253,6 +262,8 @@ export default function NewContactScreen() {
         <Button title="Delete" color="red" onPress={handleDelete} />
       )}
     </ScrollView>
+    <ScrollIndicator viewportHeight={viewportH} contentHeight={contentH} scrollOffset={offsetY} />
+    </View>
     <FAB icon="arrow-back" onPress={() => router.back()} />
   </SafeAreaView>
   );

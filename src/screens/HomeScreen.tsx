@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -8,6 +8,7 @@ import {
   LayoutAnimation,
   Platform,
   UIManager,
+  PanResponder,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -23,6 +24,12 @@ export default function HomeScreen() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const router = useRouter();
+  const MIN_LIST = 160;
+  const MIN_TAG = 60;
+  const HANDLE_H = 16;
+  const [splitAreaH, setSplitAreaH] = useState(0);
+  const [tagHeight, setTagHeight] = useState(120);
+  const dragStartTagH = useRef(120);
 
   useEffect(() => {
     if (Platform.OS === 'android') {
@@ -42,6 +49,28 @@ export default function HomeScreen() {
       load();
     }, [load])
   );
+
+  useEffect(() => {
+    if (splitAreaH <= 0) return;
+    const maxTag = Math.max(MIN_TAG, splitAreaH - HANDLE_H - MIN_LIST);
+    setTagHeight((h) => Math.min(Math.max(h, MIN_TAG), maxTag));
+  }, [splitAreaH]);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: () => {
+        dragStartTagH.current = tagHeight;
+      },
+      onPanResponderMove: (_evt, gesture) => {
+        const desired = dragStartTagH.current - gesture.dy; // drag down shrinks tag
+        const maxTag = Math.max(MIN_TAG, splitAreaH - HANDLE_H - MIN_LIST);
+        const clamped = Math.min(Math.max(desired, MIN_TAG), maxTag);
+        setTagHeight(clamped);
+      },
+    })
+  ).current;
 
   const toggleTag = (tag: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -139,6 +168,8 @@ export default function HomeScreen() {
     router.push(`/new?id=${c.id}`);
   };
 
+  const listHeight = Math.max(MIN_LIST, splitAreaH - (tagHeight + HANDLE_H));
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
       <View style={styles.topBar}>
@@ -155,15 +186,20 @@ export default function HomeScreen() {
           <Text style={styles.addButtonText}>+</Text>
         </TouchableOpacity>
       </View>
-      <View style={styles.listContainer}>
-        <ContactList
-          contacts={ordered}
-          getMatch={matchStatus}
-          onPress={handlePressContact}
-        />
-      </View>
-      <View style={styles.tagPaneWrapper}>
-        <TagPane tags={tagCounts} toggle={toggleTag} remove={removeTag} />
+      <View style={styles.splitArea} onLayout={(e) => setSplitAreaH(e.nativeEvent.layout.height)}>
+        <View style={[styles.listContainerFixed, { height: listHeight }]}>
+          <ContactList
+            contacts={ordered}
+            getMatch={matchStatus}
+            onPress={handlePressContact}
+          />
+        </View>
+        <View style={styles.splitHandle} {...panResponder.panHandlers}>
+          <View style={styles.splitGrip} />
+        </View>
+        <View style={[styles.tagPaneWrapper, { height: tagHeight }]}>
+          <TagPane tags={tagCounts} toggle={toggleTag} remove={removeTag} height={tagHeight} />
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -217,6 +253,18 @@ const styles = StyleSheet.create({
     fontSize: 28,
     lineHeight: 28,
   },
-  listContainer: { flex: 1 },
+  splitArea: { flex: 1 },
+  listContainerFixed: { position: 'relative' },
+  splitHandle: {
+    height: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  splitGrip: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#E5E7EB',
+  },
   tagPaneWrapper: { marginLeft: 16, marginBottom: 16 },
 });
