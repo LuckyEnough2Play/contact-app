@@ -326,6 +326,8 @@ const styles = StyleSheet.create({
   tagTextInput: {
     flex: 1,
     marginBottom: 0,
+    height: 40,
+    paddingVertical: 8,
   },
   addTagButton: {
     flexDirection: 'row',
