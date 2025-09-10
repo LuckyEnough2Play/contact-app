@@ -12,7 +12,10 @@
     "build:android": "eas build -p android --profile production",
     "postinstall": "patch-package",
     "sync:version": "node scripts/sync-version.mjs",
-    "eas-build-pre-install": "node scripts/sync-version.mjs"
+    "eas-build-pre-install": "node scripts/sync-version.mjs",
+    "android:logs": "adb logcat *:S ReactNative:V ReactNativeJS:V AndroidRuntime:E System.err:W",
+    "android:clear": "adb shell pm clear com.marbleminds.bubblecontacts && adb shell am force-stop com.marbleminds.bubblecontacts",
+    "android:start": "adb shell monkey -p com.marbleminds.bubblecontacts -c android.intent.category.LAUNCHER 1"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
@@ -57,6 +60,7 @@
     "@babel/core": "^7.25.2",
     "@types/react": "~19.0.10",
     "@types/uuid": "^10.0.0",
+    "babel-plugin-module-resolver": "^5.0.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~9.2.0",
     "patch-package": "^8.0.0",

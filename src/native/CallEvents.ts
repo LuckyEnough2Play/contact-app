@@ -1,4 +1,4 @@
-import { NativeModules, Platform, NativeEventEmitter } from 'react-native';
+import { NativeModules, Platform, NativeEventEmitter, DeviceEventEmitter } from 'react-native';
 
 type CallEvent = {
   type: 'incoming' | 'ended';
@@ -19,13 +19,21 @@ const CallEventsModule = (NativeModules as any).CallEvents || {
   postLikelyNotification: (_: string[]) => {},
 };
 
-export const CallEventsEmitter = new NativeEventEmitter(
-  (NativeModules as any).CallEvents || undefined
-);
+// Use DeviceEventEmitter on Android since the native module emits via
+// DeviceEventManagerModule.RCTDeviceEventEmitter. This avoids requiring a
+// specific NativeModule instance and prevents crashes when it's undefined.
+export const CallEventsEmitter: NativeEventEmitter =
+  Platform.OS === 'android'
+    ? (DeviceEventEmitter as unknown as NativeEventEmitter)
+    : new NativeEventEmitter();
 
 export function startListeners() {
   if (Platform.OS !== 'android') return;
-  if (!CallEventsModule) throw new Error(LINKING_ERROR);
+  if (!(NativeModules as any).CallEvents) {
+    // In dev or iOS, the module might not exist; avoid crashing.
+    console.warn(LINKING_ERROR);
+    return;
+    }
   CallEventsModule.startListeners?.();
 }
 
@@ -45,4 +53,3 @@ export function postLikelyNotification(names: string[]) {
 }
 
 export type { CallEvent };
-

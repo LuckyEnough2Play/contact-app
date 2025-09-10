@@ -41,6 +41,7 @@ ios/.DS_Store
 # 🚫 Ignore keystore/secrets
 android/keystore.properties
 *.keystore
+android/local.properties
 
 # Native build artifacts
 *.apk
@@ -48,6 +49,7 @@ android/keystore.properties
 *.xcarchive
 *.app
 *.ipa
+android/app/release/
 
 # -----------------------------
 # 🔐 Environment / Secrets
@@ -63,6 +65,7 @@ npm-debug.*
 yarn-debug.*
 yarn-error.*
 *.log
+docs/crashlogs/
 
 # -----------------------------
 # 🧑‍💻 IDE / Misc

@@ -7,7 +7,8 @@
     "icon": "./assets/images/icon.png",
     "scheme": "contactapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
+    "jsEngine": "jsc",
     "ios": {
       "supportsTablet": true
     },
@@ -18,7 +19,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.marbleminds.bubblecontacts",
-      "versionCode": 6,
+      "versionCode": 7,
       "permissions": [
         "android.permission.READ_CONTACTS",
         "android.permission.VIBRATE"

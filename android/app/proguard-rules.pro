@@ -12,3 +12,18 @@
 -keep class com.facebook.react.turbomodule.** { *; }
 
 # Add any project specific keep options here:
+
+# React Native / Hermes / core keeps
+-keep class com.facebook.hermes.** { *; }
+-keep class com.facebook.react.** { *; }
+-keepclassmembers class * extends com.facebook.react.bridge.JavaScriptModule { *; }
+-keepclassmembers class * extends com.facebook.react.bridge.NativeModule { *; }
+-keepclassmembers class * extends com.facebook.react.uimanager.ViewManager { *; }
+-dontwarn com.facebook.hermes.**
+-dontwarn com.facebook.react.**
+
+# Gesture handler
+-keep class com.swmansion.gesturehandler.** { *; }
+
+# react-native-contacts (package variants)
+-keep class com.rt2zz.reactnativecontacts.** { *; }

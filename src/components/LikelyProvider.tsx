@@ -15,18 +15,9 @@ export default function LikelyProvider({ children }: { children: React.ReactNode
 
   useEffect(() => {
     if (Platform.OS === 'android') {
+      // Start native listeners without prompting for sensitive runtime permissions here.
+      // Notification listener access must be granted in system settings; we open settings on demand elsewhere.
       startListeners();
-      // Best-effort runtime permissions
-      (async () => {
-        try {
-          if (Platform.Version >= 33) {
-            await PermissionsAndroid.request('android.permission.POST_NOTIFICATIONS');
-          }
-          await PermissionsAndroid.request('android.permission.READ_PHONE_STATE');
-          // On Android 9+, incoming number via telephony may require READ_CALL_LOG
-          await PermissionsAndroid.request('android.permission.READ_CALL_LOG');
-        } catch {}
-      })();
     }
 
     const sub = CallEventsEmitter.addListener('callEvent', async (event: any) => {
