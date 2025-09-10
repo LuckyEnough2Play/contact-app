@@ -1,14 +1,100 @@
 import { Contact } from './types';
 
-// Outlook-compatible CSV fields
-const HEADERS = [
+// Outlook full export header (commonly used by Import/Export wizard)
+// Keeping the full set improves automatic field matching during Outlook import.
+const OUTLOOK_FULL_HEADERS = [
+  'Title',
   'First Name',
+  'Middle Name',
   'Last Name',
-  'E-mail Address',
-  'Mobile Phone',
+  'Suffix',
   'Company',
+  'Department',
+  'Job Title',
+  'Business Street',
+  'Business Street 2',
+  'Business Street 3',
+  'Business City',
+  'Business State',
+  'Business Postal Code',
+  'Business Country/Region',
+  'Home Street',
+  'Home Street 2',
+  'Home Street 3',
+  'Home City',
+  'Home State',
+  'Home Postal Code',
+  'Home Country/Region',
+  'Other Street',
+  'Other Street 2',
+  'Other Street 3',
+  'Other City',
+  'Other State',
+  'Other Postal Code',
+  'Other Country/Region',
+  "Assistant's Phone",
+  'Business Fax',
+  'Business Phone',
+  'Business Phone 2',
+  'Callback',
+  'Car Phone',
+  'Company Main Phone',
+  'Home Fax',
+  'Home Phone',
+  'Home Phone 2',
+  'ISDN',
+  'Mobile Phone',
+  'Other Fax',
+  'Other Phone',
+  'Pager',
+  'Primary Phone',
+  'Radio Phone',
+  'TTY/TDD Phone',
+  'Telex',
+  'Account',
+  'Anniversary',
+  "Assistant's Name",
+  'Billing Information',
   'Birthday',
+  'Business Address PO Box',
   'Categories',
+  'Children',
+  'Directory Server',
+  'E-mail Address',
+  'E-mail Type',
+  'E-mail Display Name',
+  'E-mail 2 Address',
+  'E-mail 2 Type',
+  'E-mail 2 Display Name',
+  'E-mail 3 Address',
+  'E-mail 3 Type',
+  'E-mail 3 Display Name',
+  'Gender',
+  'Government ID Number',
+  'Hobby',
+  'Home Address PO Box',
+  'Initials',
+  'Internet Free Busy',
+  'Keywords',
+  'Language',
+  'Location',
+  "Manager's Name",
+  'Mileage',
+  'Notes',
+  'Office Location',
+  'Organizational ID Number',
+  'Other Address PO Box',
+  'Priority',
+  'Private',
+  'Profession',
+  'Referred By',
+  'Sensitivity',
+  'Spouse',
+  'User 1',
+  'User 2',
+  'User 3',
+  'User 4',
+  'Web Page',
 ] as const;
 
 function csvEscape(value: string): string {
@@ -31,24 +117,59 @@ function toMMDDYYYY(dateIso: string): string {
 }
 
 export function contactsToOutlookCsv(contacts: Contact[]): string {
-  const header = HEADERS.join(',');
+  // Build rows following the full Outlook template; most fields empty
+  const header = OUTLOOK_FULL_HEADERS.join(',');
   const rows = contacts.map((c) => {
-    const row = [
-      c.firstName || '',
-      c.lastName || '',
-      c.email || '',
-      c.phone || '',
-      c.company || '',
-      c.birthday ? toMMDDYYYY(c.birthday) : '',
-      (c.tags || []).join('; '),
-    ];
-    return row.map((v) => csvEscape(v)).join(',');
+    const line: string[] = new Array(OUTLOOK_FULL_HEADERS.length).fill('');
+    // Map fields we manage
+    const set = (name: (typeof OUTLOOK_FULL_HEADERS)[number], value: string | undefined) => {
+      if (value == null) return;
+      const idx = OUTLOOK_FULL_HEADERS.indexOf(name);
+      if (idx >= 0) line[idx] = value;
+    };
+    set('First Name', c.firstName || '');
+    set('Last Name', c.lastName || '');
+    set('Company', c.company || '');
+    set('Mobile Phone', c.phone || '');
+    set('E-mail Address', c.email || '');
+    set('Birthday', c.birthday ? toMMDDYYYY(c.birthday) : '');
+    set('Categories', (c.tags || []).join('; '));
+    return line.map((v) => csvEscape(v)).join(',');
   });
   return [header, ...rows].join('\n');
 }
 
-// Lightweight CSV parser supporting RFC4180 quoting
+// Detect delimiter by scanning the first non-empty line, considering quotes.
+function detectDelimiter(text: string): ',' | ';' | '\t' {
+  const firstLine = (text.match(/^[^\r\n]*/)?.[0] || '').trimEnd();
+  if (!firstLine) return ',';
+  const candidates: Array<{ d: ',' | ';' | '\t'; count: number }> = [
+    { d: ',', count: 0 },
+    { d: ';', count: 0 },
+    { d: '\t', count: 0 },
+  ];
+  let inQuotes = false;
+  for (let i = 0; i < firstLine.length; i++) {
+    const ch = firstLine[i];
+    if (ch === '"') {
+      if (firstLine[i + 1] === '"') {
+        i++;
+        continue;
+      }
+      inQuotes = !inQuotes;
+      continue;
+    }
+    if (!inQuotes) {
+      for (const c of candidates) if (ch === c.d) c.count++;
+    }
+  }
+  candidates.sort((a, b) => b.count - a.count);
+  return candidates[0].count > 0 ? candidates[0].d : ',';
+}
+
+// Lightweight CSV parser supporting RFC4180 quoting and common delimiters
 function parseCsv(text: string): string[][] {
+  const delimiter: string = detectDelimiter(text);
   const rows: string[][] = [];
   let row: string[] = [];
   let cur = '';
@@ -78,7 +199,7 @@ function parseCsv(text: string): string[][] {
         i++;
         continue;
       }
-      if (ch === ',') {
+      if (ch === delimiter) {
         row.push(cur);
         cur = '';
         i++;
@@ -129,10 +250,25 @@ function normalizeHeader(h: string): string {
   const s = h.trim().toLowerCase();
   if (s.includes('first') && s.includes('name')) return 'firstName';
   if (s.includes('last') && s.includes('name')) return 'lastName';
-  if (s.includes('email')) return 'email';
-  if (s.includes('e-mail')) return 'email';
-  if (s.includes('mobile') && s.includes('phone')) return 'phone';
+
+  // email variants
+  if ((s.includes('e-mail') || s.includes('email')) && s.includes('address')) {
+    if (s.includes(' 2 ') || s.includes('2')) return 'email2';
+    if (s.includes(' 3 ') || s.includes('3')) return 'email3';
+    return 'email';
+  }
+  if (s === 'email' || s === 'e-mail') return 'email';
+
+  // phone variants with precedence
+  if (s.includes('mobile') && s.includes('phone')) return 'phone_mobile';
+  if (s.includes('primary') && s.includes('phone')) return 'phone_primary';
+  if (s.includes('business') && s.includes('phone')) return 'phone_business';
+  if (s.includes('home') && s.includes('phone')) return 'phone_home';
+  if (s.includes('other') && s.includes('phone')) return 'phone_other';
+  if (s.includes('car') && s.includes('phone')) return 'phone_other';
+  if (s.includes('company main') && s.includes('phone')) return 'phone_business';
   if (s === 'phone' || s === 'mobile') return 'phone';
+
   if (s.includes('company')) return 'company';
   if (s.includes('birthday') || s.includes('birth')) return 'birthday';
   if (s.includes('categor')) return 'tags'; // Category/Categories
@@ -180,6 +316,7 @@ export function parseOutlookCsv(text: string): ParsedContactLike[] {
   for (let r = 1; r < rows.length; r++) {
     const row = rows[r];
     const obj: any = { tags: [] as string[] };
+    let phoneRank = 99; // lower is better
     for (let i = 0; i < row.length; i++) {
       const key = map[i];
       const val = row[i]?.trim?.() ?? '';
@@ -194,9 +331,60 @@ export function parseOutlookCsv(text: string): ParsedContactLike[] {
         case 'email':
           obj.email = val || undefined;
           break;
-        case 'phone':
-          obj.phone = val;
+        case 'email2':
+          if (!obj.email && val) obj.email = val;
           break;
+        case 'email3':
+          if (!obj.email && val) obj.email = val;
+          break;
+        case 'phone': {
+          const rank = 6;
+          if (val && rank < phoneRank) {
+            obj.phone = val;
+            phoneRank = rank;
+          }
+          break;
+        }
+        case 'phone_mobile': {
+          const rank = 1;
+          if (val && rank < phoneRank) {
+            obj.phone = val;
+            phoneRank = rank;
+          }
+          break;
+        }
+        case 'phone_primary': {
+          const rank = 2;
+          if (val && rank < phoneRank) {
+            obj.phone = val;
+            phoneRank = rank;
+          }
+          break;
+        }
+        case 'phone_business': {
+          const rank = 3;
+          if (val && rank < phoneRank) {
+            obj.phone = val;
+            phoneRank = rank;
+          }
+          break;
+        }
+        case 'phone_home': {
+          const rank = 4;
+          if (val && rank < phoneRank) {
+            obj.phone = val;
+            phoneRank = rank;
+          }
+          break;
+        }
+        case 'phone_other': {
+          const rank = 5;
+          if (val && rank < phoneRank) {
+            obj.phone = val;
+            phoneRank = rank;
+          }
+          break;
+        }
         case 'company':
           obj.company = val || undefined;
           break;
@@ -227,4 +415,3 @@ export function parseOutlookCsv(text: string): ParsedContactLike[] {
   }
   return out;
 }
-

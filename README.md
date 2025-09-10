@@ -60,7 +60,8 @@ Join our community of developers creating universal apps.
 - Import: In Outlook, export contacts to CSV (File → Open & Export → Export to a file → CSV). In the app, Home → ⇄ → "Import from Outlook CSV" and pick the exported file. Existing contacts are matched by email or phone; matches are updated and tags (Outlook categories) are merged.
 
 Notes
-- CSV fields used: First Name, Last Name, E-mail Address, Mobile Phone, Company, Birthday, Categories.
+- Export matches Outlook’s full header template for easy import; unused columns are left blank.
+- Import auto-detects delimiter (comma, semicolon, or tab) and maps common Outlook variants (Mobile/Business/Home/Primary phone; E-mail 2/3) into the app’s fields.
 - Tags map to Outlook Categories (semicolon-separated in CSV).
 - Requires the following Expo packages: `expo-document-picker`, `expo-file-system`, `expo-sharing`.
 
