@@ -7,12 +7,14 @@ export interface AppSettings {
   likelyPopupEnabled: boolean;
   headsUpEnabled: boolean;
   nameOrder: NameOrder;
+  callMethod: 'ask' | 'system' | 'facetime' | 'skype';
 }
 
 const defaultSettings: AppSettings = {
   likelyPopupEnabled: true,
   headsUpEnabled: true,
   nameOrder: 'firstLast',
+  callMethod: 'ask',
 };
 
 let cached: AppSettings | null = null;

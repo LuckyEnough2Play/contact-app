@@ -11,7 +11,7 @@ export default function LikelyProvider({ children }: { children: React.ReactNode
   const [names, setNames] = useState<string[]>([]);
   const hideTimer = useRef<NodeJS.Timeout | null>(null);
   const appState = useRef<AppStateStatus>(AppState.currentState);
-  const settingsRef = useRef<AppSettings>({ likelyPopupEnabled: true, headsUpEnabled: true, nameOrder: 'firstLast' });
+  const settingsRef = useRef<AppSettings>({ likelyPopupEnabled: true, headsUpEnabled: true, nameOrder: 'firstLast', callMethod: 'ask' });
 
   useEffect(() => {
     if (Platform.OS === 'android') {

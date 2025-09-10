@@ -1,9 +1,11 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, Linking, View, GestureResponderEvent } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, View, GestureResponderEvent } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 import { Contact } from '../lib/types';
 import { displayName, NameOrder } from '../lib/names';
+import { placeCall } from '../lib/call';
+import { loadSettings } from '../lib/settings';
 
 interface Props {
   contact: Contact;
@@ -16,9 +18,10 @@ function ContactCard({ contact, match, onPress, nameOrder }: Props) {
   const background =
     match === 'full' ? '#FFD700' : match === 'partial' ? '#03A9F4' : '#D3D3D3';
 
-  const handleCall = (e: GestureResponderEvent) => {
+  const handleCall = async (e: GestureResponderEvent) => {
     e.stopPropagation();
-    Linking.openURL(`tel:${contact.phone}`);
+    const s = await loadSettings();
+    await placeCall(contact.phone, s.callMethod);
   };
 
   return (

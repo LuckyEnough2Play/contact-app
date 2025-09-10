@@ -20,6 +20,8 @@ import { Contact } from '../lib/types';
 import { loadContacts, saveContacts } from '../lib/storage';
 import FAB from '../components/FAB';
 import ScrollIndicator from '../components/ScrollIndicator';
+import { placeCall } from '../lib/call';
+import { loadSettings } from '../lib/settings';
 
 export default function NewContactScreen() {
   const router = useRouter();
@@ -178,7 +180,10 @@ export default function NewContactScreen() {
           autoCapitalize="none"
         />
         <TouchableOpacity
-          onPress={() => Linking.openURL(`tel:${phone}`)}
+          onPress={async () => {
+            const s = await loadSettings();
+            await placeCall(phone, s.callMethod);
+          }}
           style={styles.callButton}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           accessibilityLabel={phone ? `Call ${firstName} ${lastName}` : 'Call number'}

@@ -1,21 +1,31 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Switch, Button, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Switch, Button, Alert, TouchableOpacity, Linking, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 
 import { loadSettings, saveSettings, AppSettings } from '../lib/settings';
+import type { CallMethod } from '../lib/call';
 import { exportOutlookCsv, importOutlookCsv, importAllFromDeviceContacts } from '../lib/transfer';
 import { openNotificationAccessSettings } from '../native/CallEvents';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const [settings, setSettings] = useState<AppSettings>({ likelyPopupEnabled: true, headsUpEnabled: true, nameOrder: 'firstLast' });
+  const [settings, setSettings] = useState<AppSettings>({ likelyPopupEnabled: true, headsUpEnabled: true, nameOrder: 'firstLast', callMethod: 'ask' });
   const [busy, setBusy] = useState(false);
   const [lastMessage, setLastMessage] = useState('');
+  const [availableCallApps, setAvailableCallApps] = useState<{ facetime: boolean; skype: boolean }>({ facetime: false, skype: false });
 
   useEffect(() => {
     loadSettings().then(setSettings);
+    // detect installed call apps for choices
+    (async () => {
+      let facetime = false;
+      let skype = false;
+      try { if (Platform.OS === 'ios') facetime = await Linking.canOpenURL('facetime://'); } catch {}
+      try { skype = await Linking.canOpenURL('skype:'); } catch {}
+      setAvailableCallApps({ facetime, skype });
+    })();
   }, []);
 
   const toggle = async (key: keyof AppSettings) => {
@@ -26,6 +36,12 @@ export default function SettingsScreen() {
   const setOrder = async (order: AppSettings['nameOrder']) => {
     if (settings.nameOrder === order) return;
     const next = await saveSettings({ nameOrder: order });
+    setSettings(next);
+  };
+
+  const setCallMethod = async (method: CallMethod) => {
+    if (settings.callMethod === method) return;
+    const next = await saveSettings({ callMethod: method });
     setSettings(next);
   };
 
@@ -101,6 +117,63 @@ export default function SettingsScreen() {
               <Text style={styles.choiceText}>Last, First</Text>
             </TouchableOpacity>
           </View>
+        </View>
+
+        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Calling</Text>
+        <View style={styles.row}>
+          <Text style={styles.label}>Default calling method</Text>
+        </View>
+        <View style={[styles.row, { justifyContent: 'flex-start' }]}>
+          <TouchableOpacity
+            style={[styles.choice, settings.callMethod === 'ask' && styles.choiceSelected]}
+            onPress={() => setCallMethod('ask')}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: settings.callMethod === 'ask' }}
+            accessibilityLabel="Ask every time which app to use"
+          >
+            <MaterialIcons name={settings.callMethod === 'ask' ? 'radio-button-checked' : 'radio-button-unchecked'} size={18} color="#000" />
+            <Text style={styles.choiceText}>Ask every time</Text>
+          </TouchableOpacity>
+          <View style={{ width: 8 }} />
+          <TouchableOpacity
+            style={[styles.choice, settings.callMethod === 'system' && styles.choiceSelected]}
+            onPress={() => setCallMethod('system')}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: settings.callMethod === 'system' }}
+            accessibilityLabel="Use the system Phone app"
+          >
+            <MaterialIcons name={settings.callMethod === 'system' ? 'radio-button-checked' : 'radio-button-unchecked'} size={18} color="#000" />
+            <Text style={styles.choiceText}>Phone (system)</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={[styles.row, { justifyContent: 'flex-start' }]}>
+          {Platform.OS === 'ios' && availableCallApps.facetime && (
+            <TouchableOpacity
+              style={[styles.choice, settings.callMethod === 'facetime' && styles.choiceSelected]}
+              onPress={() => setCallMethod('facetime')}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: settings.callMethod === 'facetime' }}
+              accessibilityLabel="Use FaceTime for calls"
+            >
+              <MaterialIcons name={settings.callMethod === 'facetime' ? 'radio-button-checked' : 'radio-button-unchecked'} size={18} color="#000" />
+              <Text style={styles.choiceText}>FaceTime</Text>
+            </TouchableOpacity>
+          )}
+          {availableCallApps.skype && (
+            <>
+              <View style={{ width: 8 }} />
+              <TouchableOpacity
+                style={[styles.choice, settings.callMethod === 'skype' && styles.choiceSelected]}
+                onPress={() => setCallMethod('skype')}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: settings.callMethod === 'skype' }}
+                accessibilityLabel="Use Skype for calls"
+              >
+                <MaterialIcons name={settings.callMethod === 'skype' ? 'radio-button-checked' : 'radio-button-unchecked'} size={18} color="#000" />
+                <Text style={styles.choiceText}>Skype</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
 
         <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Notifications</Text>
