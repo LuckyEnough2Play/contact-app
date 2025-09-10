@@ -3,14 +3,16 @@ import { TouchableOpacity, Text, StyleSheet, Linking, View, GestureResponderEven
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 import { Contact } from '../lib/types';
+import { displayName, NameOrder } from '../lib/names';
 
 interface Props {
   contact: Contact;
   match: 'full' | 'partial' | 'none';
   onPress?: () => void;
+  nameOrder: NameOrder;
 }
 
-function ContactCard({ contact, match, onPress }: Props) {
+function ContactCard({ contact, match, onPress, nameOrder }: Props) {
   const background =
     match === 'full' ? '#FFD700' : match === 'partial' ? '#03A9F4' : '#D3D3D3';
 
@@ -26,8 +28,8 @@ function ContactCard({ contact, match, onPress }: Props) {
       activeOpacity={0.8}
     >
       <View style={styles.row}>
-        <Text style={styles.name}>{`${contact.firstName}, ${contact.lastName}`}</Text>
-        <TouchableOpacity onPress={handleCall} style={styles.callButton} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} accessibilityLabel={`Call ${contact.firstName} ${contact.lastName}`}>
+        <Text style={styles.name}>{displayName(contact, nameOrder)}</Text>
+        <TouchableOpacity onPress={handleCall} style={styles.callButton} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} accessibilityLabel={`Call ${displayName(contact, nameOrder)}`}>
           <MaterialIcons name="call" size={20} color="#000" />
         </TouchableOpacity>
       </View>

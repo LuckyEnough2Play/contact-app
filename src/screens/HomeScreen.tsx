@@ -13,16 +13,20 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 import ContactList from '../components/ContactList';
 import TagPane, { TagInfo } from '../components/TagPane';
 import { loadContacts, saveContacts } from '../lib/storage';
 import { Contact } from '../lib/types';
+import { compareContacts, NameOrder } from '../lib/names';
+import { AppSettings, loadSettings, subscribeSettings } from '../lib/settings';
 
 export default function HomeScreen() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [search, setSearch] = useState('');
+  const [settings, setSettings] = useState<AppSettings | null>(null);
   const router = useRouter();
   const MIN_LIST = 160;
   const MIN_TAG = 60;
@@ -47,6 +51,15 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       load();
+      let mounted = true;
+      loadSettings().then((s) => {
+        if (mounted) setSettings(s);
+      });
+      const unsub = subscribeSettings((s) => setSettings(s));
+      return () => {
+        mounted = false;
+        unsub();
+      };
     }, [load])
   );
 
@@ -128,9 +141,8 @@ export default function HomeScreen() {
     [selectedTags]
   );
 
-  const sortByName = (a: Contact, b: Contact) =>
-    (a.firstName || '').localeCompare(b.firstName || '') ||
-    (a.lastName || '').localeCompare(b.lastName || '');
+  const nameOrder: NameOrder = settings?.nameOrder || 'firstLast';
+  const sortByName = (a: Contact, b: Contact) => compareContacts(a, b, nameOrder);
 
   const searchFiltered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -179,8 +191,8 @@ export default function HomeScreen() {
           value={search}
           onChangeText={setSearch}
         />
-        <TouchableOpacity style={[styles.iconButton, styles.transferButton]} onPress={() => router.push('/transfer')}>
-          <Text style={styles.iconButtonText}>⇄</Text>
+        <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/settings')} accessibilityLabel="Open settings">
+          <MaterialIcons name="settings" size={22} color="#000" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
           <Text style={styles.addButtonText}>+</Text>
@@ -192,6 +204,7 @@ export default function HomeScreen() {
             contacts={ordered}
             getMatch={matchStatus}
             onPress={handlePressContact}
+            nameOrder={nameOrder}
           />
         </View>
         <View style={styles.splitHandle} {...panResponder.panHandlers}>
@@ -238,15 +251,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 8,
-  },
-  transferButton: {
-    backgroundColor: '#8BC34A',
-  },
-  iconButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    lineHeight: 18,
-    fontWeight: 'bold',
   },
   addButtonText: {
     color: '#fff',

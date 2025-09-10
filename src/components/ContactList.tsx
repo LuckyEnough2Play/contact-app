@@ -4,14 +4,16 @@ import { FlatList, View } from 'react-native';
 import ContactCard from './ContactCard';
 import { Contact } from '../lib/types';
 import ScrollIndicator from './ScrollIndicator';
+import type { NameOrder } from '../lib/names';
 
 interface Props {
   contacts: Contact[];
   getMatch: (c: Contact) => 'full' | 'partial' | 'none';
   onPress: (c: Contact) => void;
+  nameOrder: NameOrder;
 }
 
-export default function ContactList({ contacts, getMatch, onPress }: Props) {
+export default function ContactList({ contacts, getMatch, onPress, nameOrder }: Props) {
   const [viewportH, setViewportH] = useState(0);
   const [contentH, setContentH] = useState(0);
   const [offsetY, setOffsetY] = useState(0);
@@ -34,6 +36,7 @@ export default function ContactList({ contacts, getMatch, onPress }: Props) {
             contact={item}
             match={getMatch(item)}
             onPress={() => onPress(item)}
+            nameOrder={nameOrder}
           />
         )}
       />
