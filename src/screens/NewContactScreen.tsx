@@ -32,6 +32,7 @@ export default function NewContactScreen() {
   const [email, setEmail] = useState('');
   const [birthday, setBirthday] = useState<string | undefined>();
   const [company, setCompany] = useState('');
+  const [title, setTitle] = useState('');
   const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
@@ -54,6 +55,7 @@ export default function NewContactScreen() {
           setEmail(c.email || '');
           setBirthday(c.birthday);
           setCompany(c.company || '');
+          setTitle(c.title || '');
           setSelectedTags(c.tags);
         }
       }
@@ -91,6 +93,8 @@ export default function NewContactScreen() {
       setBirthday(undefined);
     }
     setCompany(c.company || '');
+    const anyC = c as any;
+    setTitle(anyC?.jobTitle || '');
     setSelectedTags([]);
   };
 
@@ -112,6 +116,7 @@ export default function NewContactScreen() {
       email: email || undefined,
       birthday,
       company: company || undefined,
+      title: title || undefined,
       tags: selectedTags,
     };
     let updated: Contact[];
@@ -222,6 +227,14 @@ export default function NewContactScreen() {
         placeholderTextColor="#999"
         value={company}
         onChangeText={setCompany}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Title (e.g., Software Engineer)"
+        placeholderTextColor="#999"
+        value={title}
+        onChangeText={setTitle}
+        autoCapitalize="words"
       />
       <View style={styles.tagsSection}>
         <Text style={styles.sectionTitle}>Tags</Text>

@@ -55,6 +55,7 @@ export async function importOutlookCsv(): Promise<{ added: number; updated: numb
         email: inc.email || cur.email,
         birthday: inc.birthday || cur.birthday,
         company: inc.company || cur.company,
+        title: inc.title || cur.title,
         tags: Array.from(new Set([...(cur.tags || []), ...(inc.tags || [])])),
       };
       merged[maybeIdx] = next;
@@ -68,6 +69,7 @@ export async function importOutlookCsv(): Promise<{ added: number; updated: numb
         email: inc.email || undefined,
         birthday: inc.birthday || undefined,
         company: inc.company || undefined,
+        title: inc.title || undefined,
         tags: inc.tags || [],
       });
       added++;
@@ -151,4 +153,3 @@ export async function importAllFromDeviceContacts(): Promise<{ added: number; up
   await saveContacts(merged);
   return { added, updated, total: added + updated };
 }
-

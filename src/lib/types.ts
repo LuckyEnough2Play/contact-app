@@ -6,5 +6,6 @@ export interface Contact {
   email?: string;
   birthday?: string; // ISO string
   company?: string;
+  title?: string;
   tags: string[];
 }

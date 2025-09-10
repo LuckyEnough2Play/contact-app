@@ -130,6 +130,7 @@ export function contactsToOutlookCsv(contacts: Contact[]): string {
     set('First Name', c.firstName || '');
     set('Last Name', c.lastName || '');
     set('Company', c.company || '');
+    set('Job Title', c.title || '');
     set('Mobile Phone', c.phone || '');
     set('E-mail Address', c.email || '');
     set('Birthday', c.birthday ? toMMDDYYYY(c.birthday) : '');
@@ -270,6 +271,7 @@ function normalizeHeader(h: string): string {
   if (s === 'phone' || s === 'mobile') return 'phone';
 
   if (s.includes('company')) return 'company';
+  if (s.includes('job') && s.includes('title')) return 'jobTitle';
   if (s.includes('birthday') || s.includes('birth')) return 'birthday';
   if (s.includes('categor')) return 'tags'; // Category/Categories
   return s;
@@ -301,6 +303,7 @@ export interface ParsedContactLike {
   email?: string;
   birthday?: string;
   company?: string;
+  title?: string;
   tags: string[];
 }
 
@@ -387,6 +390,9 @@ export function parseOutlookCsv(text: string): ParsedContactLike[] {
         }
         case 'company':
           obj.company = val || undefined;
+          break;
+        case 'jobTitle':
+          obj.title = val || undefined;
           break;
         case 'birthday':
           obj.birthday = parseBirthday(val);

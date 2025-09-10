@@ -16,6 +16,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 import ContactList from '../components/ContactList';
+import Fuse from 'fuse.js';
 import TagPane, { TagInfo } from '../components/TagPane';
 import { loadContacts, saveContacts } from '../lib/storage';
 import { Contact } from '../lib/types';
@@ -144,15 +145,45 @@ export default function HomeScreen() {
   const nameOrder: NameOrder = settings?.nameOrder || 'firstLast';
   const sortByName = (a: Contact, b: Contact) => compareContacts(a, b, nameOrder);
 
+  type SearchItem = { ref: Contact; indexText: string };
+
+  const searchIndex = useMemo<SearchItem[]>(() => {
+    return contacts.map((c) => {
+      const fields: (string | undefined)[] = [
+        c.firstName,
+        c.lastName,
+        c.phone,
+        c.phone?.replace(/\D/g, ''),
+        c.email,
+        c.company,
+        c.title,
+        c.birthday,
+        ...(c.tags || []),
+      ];
+      const indexText = fields
+        .filter((v): v is string => !!v)
+        .join(' ')
+        .toLowerCase();
+      return { ref: c, indexText };
+    });
+  }, [contacts]);
+
+  const fuse = useMemo(() => {
+    return new Fuse<SearchItem>(searchIndex, {
+      includeScore: true,
+      threshold: 0.35,
+      ignoreLocation: true,
+      minMatchCharLength: 2,
+      keys: ['indexText'],
+    });
+  }, [searchIndex]);
+
   const searchFiltered = useMemo(() => {
     const term = search.trim().toLowerCase();
     if (!term) return contacts;
-    return contacts.filter(
-      (c) =>
-        `${c.firstName} ${c.lastName}`.toLowerCase().includes(term) ||
-        c.tags.some((t) => t.toLowerCase().includes(term))
-    );
-  }, [contacts, search]);
+    const results = fuse.search(term);
+    return results.map((r) => r.item.ref);
+  }, [contacts, search, fuse]);
 
   const ordered = useMemo(() => {
     const groups = {
