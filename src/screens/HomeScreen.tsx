@@ -18,7 +18,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import ContactList from '../components/ContactList';
 import Fuse from 'fuse.js';
 import TagPane, { TagInfo } from '../components/TagPane';
-import { loadContacts, saveContacts } from '../lib/storage';
+import { loadContactsSafe, saveContacts } from '../lib/storage';
 import { Contact } from '../lib/types';
 import { compareContacts, NameOrder } from '../lib/names';
 import { AppSettings, loadSettings, subscribeSettings } from '../lib/settings';
@@ -43,7 +43,7 @@ export default function HomeScreen() {
   }, []);
 
   const load = useCallback(() => {
-    loadContacts().then((data) => {
+    loadContactsSafe().then((data) => {
       // Do not seed placeholder contacts; keep empty until user adds/imports
       setContacts(data);
     });

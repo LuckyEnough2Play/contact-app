@@ -4,12 +4,12 @@ import * as DocumentPicker from 'expo-document-picker';
 import { Platform } from 'react-native';
 import * as DeviceContacts from 'expo-contacts';
 import { contactsToOutlookCsv, parseOutlookCsv } from './outlookCsv';
-import { loadContacts, saveContacts } from './storage';
+import { loadContactsSafe, saveContacts } from './storage';
 import { Contact } from './types';
 import { v4 as uuid } from 'uuid';
 
 export async function exportOutlookCsv(): Promise<string> {
-  const contacts = await loadContacts();
+  const contacts = await loadContactsSafe();
   const csv = contactsToOutlookCsv(contacts);
   const fileName = `contacts-outlook.csv`;
   const target = `${FileSystem.cacheDirectory || FileSystem.documentDirectory}${fileName}`;
@@ -28,7 +28,7 @@ export async function importOutlookCsv(): Promise<{ added: number; updated: numb
   if (!asset?.uri) return { added: 0, updated: 0, total: 0 };
   const content = await FileSystem.readAsStringAsync(asset.uri, { encoding: FileSystem.EncodingType.UTF8 });
   const imported = parseOutlookCsv(content);
-  const existing = await loadContacts();
+  const existing = await loadContactsSafe();
 
   let added = 0;
   let updated = 0;
@@ -94,7 +94,7 @@ export async function importAllFromDeviceContacts(): Promise<{ added: number; up
     ],
     pageSize: 1000,
   });
-  const existing = await loadContacts();
+  const existing = await loadContactsSafe();
   const merged: Contact[] = [...existing];
   const byKey = new Map<string, number>();
   merged.forEach((c, idx) => {

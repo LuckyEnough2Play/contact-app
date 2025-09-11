@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { AppState, AppStateStatus, PermissionsAndroid, Platform } from 'react-native';
 import LikelyPopup from './LikelyPopup';
 import { CallEventsEmitter, postLikelyNotification, startListeners } from '../native/CallEvents';
-import { loadContacts } from '../lib/storage';
+import { loadContactsSafe } from '../lib/storage';
 import { Contact } from '../lib/types';
 import { numbersMatch } from '../lib/phone';
 import { AppSettings, loadSettings, subscribeSettings } from '../lib/settings';
@@ -25,7 +25,7 @@ export default function LikelyProvider({ children }: { children: React.ReactNode
         if (!settingsRef.current.likelyPopupEnabled && !settingsRef.current.headsUpEnabled) {
           return;
         }
-        const contacts = await loadContacts();
+        const contacts = await loadContactsSafe();
         const matched = contacts
           .filter((c: Contact) => numbersMatch(c.phone, event.number))
           .sort((a: Contact, b: Contact) => (a.firstName || '').localeCompare(b.firstName || ''))

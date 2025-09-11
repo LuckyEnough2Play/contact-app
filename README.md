@@ -54,6 +54,13 @@ Join our community of developers creating universal apps.
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
 
+## Data reset (dev)
+
+- If you need to test from a clean slate on Android: `npm run android:clear` (uses package `com.marbleminds.bubblecontacts`).
+- Or on device: Settings → Apps → Bubble Contacts → Storage → Clear data.
+
+The app automatically migrates old data to schema v2 at startup; any unfixable rows are quarantined under AsyncStorage keys prefixed with `bc:quarantine:`. Startup should never crash due to stored data mismatches.
+
 ## Outlook Transfer (CSV)
 
 - Export: Home → tap the ⇄ button → "Export to Outlook CSV". Share or save the generated `contacts-outlook.csv`, then import it in Outlook (File → Open & Export → Import/Export → Import from another program or file → CSV).

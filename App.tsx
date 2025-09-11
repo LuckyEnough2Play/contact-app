@@ -2,6 +2,7 @@
 import 'react-native-gesture-handler';
 import React from 'react';
 import RootErrorBoundary from './src/components/RootErrorBoundary';
+import BootGate from './src/components/BootGate';
 
 // Global JS error hook: log instead of silent kill
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -13,7 +14,9 @@ function Wrapped() {
   const Entry = require('expo-router/entry').default;
   return (
     <RootErrorBoundary>
-      <Entry />
+      <BootGate>
+        <Entry />
+      </BootGate>
     </RootErrorBoundary>
   );
 }

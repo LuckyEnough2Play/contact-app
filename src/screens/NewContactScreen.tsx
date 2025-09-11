@@ -17,7 +17,7 @@ import { v4 as uuid } from 'uuid';
 import * as DeviceContacts from 'expo-contacts';
 
 import { Contact } from '../lib/types';
-import { loadContacts, saveContacts } from '../lib/storage';
+import { loadContactsSafe, saveContacts } from '../lib/storage';
 import FAB from '../components/FAB';
 import ScrollIndicator from '../components/ScrollIndicator';
 import { placeCall } from '../lib/call';
@@ -45,7 +45,7 @@ export default function NewContactScreen() {
   // Import flow simplified to single-pick to avoid navigation bounce
 
   useEffect(() => {
-    loadContacts().then((data) => {
+    loadContactsSafe().then((data) => {
       setContacts(data);
       setAvailableTags(Array.from(new Set(data.flatMap((c) => c.tags))));
       if (id) {
