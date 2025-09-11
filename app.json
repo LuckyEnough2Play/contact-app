@@ -19,7 +19,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.marbleminds.bubblecontacts",
-      "versionCode": 8,
+      "versionCode": 9,
       "permissions": [
         "android.permission.READ_CONTACTS",
         "android.permission.VIBRATE"
