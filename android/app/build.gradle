@@ -72,7 +72,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
 
         // TODO: Bump versionCode EVERY Play upload (2, 3, 4, ...)
-        versionCode 7
+        versionCode 8
         // TODO: Optional—update versionName when you want users to see a new app version string
         versionName getPackageJsonVersion()
     }
