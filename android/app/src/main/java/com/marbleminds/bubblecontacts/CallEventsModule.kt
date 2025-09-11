@@ -32,8 +32,22 @@ class CallEventsModule(private val reactContext: ReactApplicationContext) : Reac
   fun startListeners() {
     if (registered) return
     val filter = IntentFilter().apply { addAction(ACTION_CALL_EVENT) }
-    reactContext.registerReceiver(receiver, filter)
-    registered = true
+    try {
+      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+        // Android 13+ requires specifying exported state for non-system broadcasts
+        reactContext.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
+      } else {
+        @Suppress("DEPRECATION")
+        reactContext.registerReceiver(receiver, filter)
+      }
+      registered = true
+    } catch (t: Throwable) {
+      // Ensure we don't leave a half-registered receiver
+      try {
+        reactContext.unregisterReceiver(receiver)
+      } catch (_: Exception) {}
+      throw t
+    }
   }
 
   @ReactMethod
@@ -41,6 +55,7 @@ class CallEventsModule(private val reactContext: ReactApplicationContext) : Reac
     if (!registered) return
     try {
       reactContext.unregisterReceiver(receiver)
+    } catch (_: IllegalArgumentException) { // already unregistered or not registered
     } catch (_: Exception) {}
     registered = false
   }
@@ -65,4 +80,3 @@ class CallEventsModule(private val reactContext: ReactApplicationContext) : Reac
     const val ACTION_CALL_EVENT = "com.marbleminds.bubblecontacts.CALL_EVENT"
   }
 }
-
