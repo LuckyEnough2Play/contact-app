@@ -1,15 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  StyleSheet,
-  View,
-  TextInput,
-  TouchableOpacity,
-  Text,
-  LayoutAnimation,
-  Platform,
-  UIManager,
-  PanResponder,
-} from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { StyleSheet, View, TextInput, TouchableOpacity, Text, Platform, UIManager, LayoutAnimation } from 'react-native';
 import Screen from '../components/Screen';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
@@ -17,11 +7,13 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 import ContactList from '../components/ContactList';
 import Fuse from 'fuse.js';
-import TagPane, { TagInfo } from '../components/TagPane';
+import { TagInfo } from '../components/TagPane';
 import { loadContactsSafe, saveContacts } from '../lib/storage';
 import { Contact } from '../lib/types';
 import { compareContacts, NameOrder } from '../lib/names';
 import { AppSettings, loadSettings, subscribeSettings } from '../lib/settings';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import TagBottomSheet from '../components/TagBottomSheet';
 
 export default function HomeScreen() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -29,12 +21,8 @@ export default function HomeScreen() {
   const [search, setSearch] = useState('');
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const router = useRouter();
-  const MIN_LIST = 160;
-  const MIN_TAG = 60;
-  const HANDLE_H = 16;
-  const [splitAreaH, setSplitAreaH] = useState(0);
-  const [tagHeight, setTagHeight] = useState(120);
-  const dragStartTagH = useRef(120);
+  const insets = useSafeAreaInsets();
+  const COLLAPSED_HEIGHT = 120; // must match TagBottomSheet collapsed visible height
 
   useEffect(() => {
     if (Platform.OS === 'android') {
@@ -64,27 +52,8 @@ export default function HomeScreen() {
     }, [load])
   );
 
-  useEffect(() => {
-    if (splitAreaH <= 0) return;
-    const maxTag = Math.max(MIN_TAG, splitAreaH - HANDLE_H - MIN_LIST);
-    setTagHeight((h) => Math.min(Math.max(h, MIN_TAG), maxTag));
-  }, [splitAreaH]);
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
-        dragStartTagH.current = tagHeight;
-      },
-      onPanResponderMove: (_evt, gesture) => {
-        const desired = dragStartTagH.current - gesture.dy; // drag down shrinks tag
-        const maxTag = Math.max(MIN_TAG, splitAreaH - HANDLE_H - MIN_LIST);
-        const clamped = Math.min(Math.max(desired, MIN_TAG), maxTag);
-        setTagHeight(clamped);
-      },
-    })
-  ).current;
+  // bottom padding to avoid contact rows being obscured by the collapsed sheet
+  const bottomPad = COLLAPSED_HEIGHT + Math.max(insets.bottom, 12) + 16;
 
   const toggleTag = (tag: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -211,7 +180,7 @@ export default function HomeScreen() {
     router.push(`/new?id=${c.id}`);
   };
 
-  const listHeight = Math.max(MIN_LIST, splitAreaH - (tagHeight + HANDLE_H));
+  // Contact list occupies full height; bottom padding ensures last rows are reachable
 
   return (
     <Screen scroll={false} padding={0}>
@@ -229,21 +198,17 @@ export default function HomeScreen() {
           <Text style={styles.addButtonText}>+</Text>
         </TouchableOpacity>
       </View>
-      <View style={styles.splitArea} onLayout={(e) => setSplitAreaH(e.nativeEvent.layout.height)}>
-        <View style={[styles.listContainerFixed, { height: listHeight }]}>
+      <View style={styles.splitArea}>
+        <View style={[styles.listContainerFixed, { flex: 1 }]}>
           <ContactList
             contacts={ordered}
             getMatch={matchStatus}
             onPress={handlePressContact}
             nameOrder={nameOrder}
+            bottomPadding={bottomPad}
           />
         </View>
-        <View style={styles.splitHandle} {...panResponder.panHandlers}>
-          <View style={styles.splitGrip} />
-        </View>
-        <View style={[styles.tagPaneWrapper, { height: tagHeight }]}>
-          <TagPane tags={tagCounts} toggle={toggleTag} remove={removeTag} height={tagHeight} />
-        </View>
+        <TagBottomSheet tags={tagCounts} onTagPress={toggleTag} onTagLongPress={removeTag} />
       </View>
     </Screen>
   );
@@ -290,16 +255,5 @@ const styles = StyleSheet.create({
   },
   splitArea: { flex: 1 },
   listContainerFixed: { position: 'relative' },
-  splitHandle: {
-    height: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  splitGrip: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#E5E7EB',
-  },
-  tagPaneWrapper: { marginLeft: 16, marginBottom: 16 },
+  // legacy split styles removed by bottom sheet integration
 });

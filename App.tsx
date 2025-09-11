@@ -1,6 +1,7 @@
 // Ensure gesture handler is initialized before any React component mounts.
 import 'react-native-gesture-handler';
 import React from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import RootErrorBoundary from './src/components/RootErrorBoundary';
 import BootGate from './src/components/BootGate';
 
@@ -14,9 +15,11 @@ function Wrapped() {
   const Entry = require('expo-router/entry').default;
   return (
     <RootErrorBoundary>
-      <BootGate>
-        <Entry />
-      </BootGate>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <BootGate>
+          <Entry />
+        </BootGate>
+      </GestureHandlerRootView>
     </RootErrorBoundary>
   );
 }

@@ -137,8 +137,8 @@ export default function NewContactScreen() {
     <Screen
       scroll
       footer={
-        <BottomActionBar>
-          <View style={{ gap: 12 }}>
+        <BottomActionBar style={{ paddingBottom: insets.bottom + 8, paddingTop: 6 }}>
+          <View style={{ gap: 8 }}>
             <PrimaryButton label="Save" onPress={handleSave} />
             {!id && <PrimaryButton label="Import from Device" onPress={handleImport} />}
             {id && <PrimaryDanger label="Delete" onPress={handleDelete} />}
@@ -390,18 +390,18 @@ function SecondaryNav({ label, onPress }: { label: string; onPress: () => void }
 
 const footerStyles = StyleSheet.create({
   primaryBtn: {
-    minHeight: 48,
+    minHeight: 40,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
+    paddingVertical: 10,
     paddingHorizontal: 16,
     backgroundColor: '#0EA5E9',
     elevation: 1,
   },
   primaryText: { color: 'white', fontSize: 16, fontWeight: '700' },
   secondaryNav: {
-    minHeight: 48,
+    minHeight: 40,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',

@@ -11,9 +11,11 @@ interface Props {
   getMatch: (c: Contact) => 'full' | 'partial' | 'none';
   onPress: (c: Contact) => void;
   nameOrder: NameOrder;
+  onScrollOffsetChange?: (y: number) => void;
+  bottomPadding?: number;
 }
 
-export default function ContactList({ contacts, getMatch, onPress, nameOrder }: Props) {
+export default function ContactList({ contacts, getMatch, onPress, nameOrder, onScrollOffsetChange, bottomPadding = 0 }: Props) {
   const [viewportH, setViewportH] = useState(0);
   const [contentH, setContentH] = useState(0);
   const [offsetY, setOffsetY] = useState(0);
@@ -28,8 +30,13 @@ export default function ContactList({ contacts, getMatch, onPress, nameOrder }: 
         removeClippedSubviews
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
+        contentContainerStyle={{ paddingBottom: bottomPadding }}
         onContentSizeChange={(_, h) => setContentH(h)}
-        onScroll={(e) => setOffsetY(e.nativeEvent.contentOffset.y)}
+        onScroll={(e) => {
+          const y = e.nativeEvent.contentOffset.y;
+          setOffsetY(y);
+          onScrollOffsetChange?.(y);
+        }}
         contentInsetAdjustmentBehavior="automatic"
         renderItem={({ item }) => (
           <ContactCard

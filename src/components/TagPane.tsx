@@ -19,11 +19,13 @@ interface Props {
   toggle: (tag: string) => void;
   remove: (tag: string) => void;
   height?: number;
+  scrollEnabled?: boolean;
+  onScrollOffsetChange?: (y: number) => void;
 }
 
 import ScrollIndicator from './ScrollIndicator';
 
-export default function TagPane({ tags, toggle, remove, height }: Props) {
+export default function TagPane({ tags, toggle, remove, height, scrollEnabled = true, onScrollOffsetChange }: Props) {
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const [viewportH, setViewportH] = useState(0);
   const [contentH, setContentH] = useState(0);
@@ -55,8 +57,13 @@ export default function TagPane({ tags, toggle, remove, height }: Props) {
           style={styles.scroll}
           contentContainerStyle={styles.container}
           showsVerticalScrollIndicator={false}
+          scrollEnabled={scrollEnabled}
           onContentSizeChange={(_, h) => setContentH(h)}
-          onScroll={(e) => setOffsetY(e.nativeEvent.contentOffset.y)}
+          onScroll={(e) => {
+            const y = e.nativeEvent.contentOffset.y;
+            setOffsetY(y);
+            onScrollOffsetChange?.(y);
+          }}
           scrollEventThrottle={16}
         >
         {sorted.map((t) => (
