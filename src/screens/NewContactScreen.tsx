@@ -2,14 +2,12 @@ import React, { useEffect, useState } from 'react';
 import {
   View,
   TextInput,
-  Button,
   Text,
   TouchableOpacity,
-  ScrollView,
   StyleSheet,
   Linking,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -18,8 +16,8 @@ import * as DeviceContacts from 'expo-contacts';
 
 import { Contact } from '../lib/types';
 import { loadContactsSafe, saveContacts } from '../lib/storage';
-import FAB from '../components/FAB';
-import ScrollIndicator from '../components/ScrollIndicator';
+import Screen from '../components/Screen';
+import BottomActionBar from '../components/BottomActionBar';
 import { placeCall } from '../lib/call';
 import { loadSettings } from '../lib/settings';
 
@@ -39,9 +37,7 @@ export default function NewContactScreen() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [showDate, setShowDate] = useState(false);
-  const [viewportH, setViewportH] = useState(0);
-  const [contentH, setContentH] = useState(0);
-  const [offsetY, setOffsetY] = useState(0);
+  // removed custom scroll indicator in favor of standard scroll
   // Import flow simplified to single-pick to avoid navigation bounce
 
   useEffect(() => {
@@ -138,21 +134,20 @@ export default function NewContactScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
-      <View style={{ flex: 1, position: 'relative' }} onLayout={(e) => setViewportH(e.nativeEvent.layout.height)}>
-      <ScrollView
-        contentContainerStyle={[
-          styles.container,
-          { paddingBottom: 16 + Math.max(insets.bottom, 16) + 72 }, // keep content above FAB + home indicator
-        ]}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        contentInsetAdjustmentBehavior="automatic"
-        showsVerticalScrollIndicator={false}
-        onContentSizeChange={(_, h) => setContentH(h)}
-        onScroll={(e) => setOffsetY(e.nativeEvent.contentOffset.y)}
-        scrollEventThrottle={16}
-      >
+    <Screen
+      scroll
+      footer={
+        <BottomActionBar>
+          <View style={{ gap: 12 }}>
+            <PrimaryButton label="Save" onPress={handleSave} />
+            {!id && <PrimaryButton label="Import from Device" onPress={handleImport} />}
+            {id && <PrimaryDanger label="Delete" onPress={handleDelete} />}
+            <SecondaryNav label="BACK" onPress={() => router.back()} />
+          </View>
+        </BottomActionBar>
+      }
+    >
+      <View style={styles.container}>
       <TextInput
         style={styles.input}
         placeholder="First Name"
@@ -274,21 +269,12 @@ export default function NewContactScreen() {
           </TouchableOpacity>
         </View>
       </View>
-      <Button title="Save" onPress={handleSave} />
-      {!id && <Button title="Import" onPress={handleImport} />}
-      {id && (
-        <Button title="Delete" color="red" onPress={handleDelete} />
-      )}
-    </ScrollView>
-    <ScrollIndicator viewportHeight={viewportH} contentHeight={contentH} scrollOffset={offsetY} />
-    </View>
-    <FAB icon="arrow-back" onPress={() => router.back()} />
-  </SafeAreaView>
+      </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#fff' },
   container: { padding: 16 },
   input: {
     borderColor: '#ccc',
@@ -372,4 +358,55 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 6,
   },
+});
+
+function PrimaryButton({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <TouchableOpacity onPress={onPress} style={footerStyles.primaryBtn} accessibilityRole="button">
+      <Text style={footerStyles.primaryText}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
+function PrimaryDanger({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={[footerStyles.primaryBtn, { backgroundColor: '#EF4444' }]}
+      accessibilityRole="button"
+    >
+      <Text style={footerStyles.primaryText}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
+function SecondaryNav({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <TouchableOpacity onPress={onPress} style={footerStyles.secondaryNav} accessibilityRole="button">
+      <Text style={footerStyles.secondaryText}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
+const footerStyles = StyleSheet.create({
+  primaryBtn: {
+    minHeight: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    backgroundColor: '#0EA5E9',
+    elevation: 1,
+  },
+  primaryText: { color: 'white', fontSize: 16, fontWeight: '700' },
+  secondaryNav: {
+    minHeight: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+  },
+  secondaryText: { fontSize: 16, fontWeight: '700', color: '#0F172A' },
 });

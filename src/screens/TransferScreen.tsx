@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet, Alert, Platform, Share, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
+import Screen from '../components/Screen';
+import BottomActionBar from '../components/BottomActionBar';
 import { exportOutlookCsv, importOutlookCsv, importAllFromDeviceContacts } from '../lib/transfer';
 
 export default function TransferScreen() {
@@ -51,38 +52,72 @@ export default function TransferScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container}>
+    <Screen
+      scroll
+      footer={
+        <BottomActionBar>
+          <View style={{ gap: 12 }}>
+            <PrimaryButton label={busy ? 'Exporting…' : 'Export to Outlook CSV'} onPress={exportCsv} />
+            <PrimaryButton label={busy ? 'Importing…' : 'Import from Outlook CSV'} onPress={importCsv} />
+            <PrimaryButton label={busy ? 'Importing…' : 'Import All from Device Contacts'} onPress={importAllFromDevice} />
+            <SecondaryNav label="BACK" onPress={() => router.back()} />
+          </View>
+        </BottomActionBar>
+      }
+    >
+      <View style={styles.container}>
         <Text style={styles.title}>Transfer Contacts with Outlook</Text>
         <Text style={styles.subtitle}>
           Use CSV files compatible with Outlook to import or export your contacts.
         </Text>
-        <View style={styles.actions}>
-          <Button title={busy ? 'Exporting…' : 'Export to Outlook CSV'} onPress={exportCsv} disabled={busy} />
-        </View>
-        <View style={styles.actions}>
-          <Button title={busy ? 'Importing…' : 'Import from Outlook CSV'} onPress={importCsv} disabled={busy} />
-        </View>
-        <View style={styles.actions}>
-          <Button
-            title={busy ? 'Importing…' : 'Import All from Device Contacts'}
-            onPress={importAllFromDevice}
-            disabled={busy}
-          />
-        </View>
         {!!lastMessage && <Text style={styles.message}>{lastMessage}</Text>}
-        <View style={{ height: 16 }} />
-        <Button title="Back" onPress={() => router.back()} />
-      </ScrollView>
-    </SafeAreaView>
+      </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#fff' },
-  container: { padding: 16 },
+  container: { gap: 12 },
   title: { fontSize: 20, fontWeight: 'bold', marginBottom: 8 },
   subtitle: { color: '#555', marginBottom: 16 },
-  actions: { marginVertical: 8 },
   message: { marginTop: 12, color: '#333' },
+});
+
+function PrimaryButton({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <TouchableOpacity onPress={onPress} style={buttonStyles.primaryBtn} accessibilityRole="button">
+      <Text style={buttonStyles.primaryText}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
+function SecondaryNav({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <TouchableOpacity onPress={onPress} style={buttonStyles.secondaryNav} accessibilityRole="button">
+      <Text style={buttonStyles.secondaryText}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
+const buttonStyles = StyleSheet.create({
+  primaryBtn: {
+    minHeight: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    backgroundColor: '#0EA5E9',
+    elevation: 1,
+  },
+  primaryText: { color: 'white', fontSize: 16, fontWeight: '700' },
+  secondaryNav: {
+    minHeight: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+  },
+  secondaryText: { fontSize: 16, fontWeight: '700', color: '#0F172A' },
 });

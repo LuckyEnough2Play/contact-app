@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Switch, Button, Alert, TouchableOpacity, Linking, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { View, Text, StyleSheet, Switch, Alert, TouchableOpacity, Linking, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 
+import Screen from '../components/Screen';
+import BottomActionBar from '../components/BottomActionBar';
 import { loadSettings, saveSettings, AppSettings } from '../lib/settings';
 import type { CallMethod } from '../lib/call';
 import { exportOutlookCsv, importOutlookCsv, importAllFromDeviceContacts } from '../lib/transfer';
@@ -11,19 +11,29 @@ import { openNotificationAccessSettings } from '../native/CallEvents';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const [settings, setSettings] = useState<AppSettings>({ likelyPopupEnabled: true, headsUpEnabled: true, nameOrder: 'firstLast', callMethod: 'ask' });
+  const [settings, setSettings] = useState<AppSettings>({
+    likelyPopupEnabled: true,
+    headsUpEnabled: true,
+    nameOrder: 'firstLast',
+    callMethod: 'ask',
+  });
   const [busy, setBusy] = useState(false);
   const [lastMessage, setLastMessage] = useState('');
-  const [availableCallApps, setAvailableCallApps] = useState<{ facetime: boolean; skype: boolean }>({ facetime: false, skype: false });
+  const [availableCallApps, setAvailableCallApps] = useState<{ facetime: boolean; skype: boolean }>(
+    { facetime: false, skype: false }
+  );
 
   useEffect(() => {
     loadSettings().then(setSettings);
-    // detect installed call apps for choices
     (async () => {
       let facetime = false;
       let skype = false;
-      try { if (Platform.OS === 'ios') facetime = await Linking.canOpenURL('facetime://'); } catch {}
-      try { skype = await Linking.canOpenURL('skype:'); } catch {}
+      try {
+        if (Platform.OS === 'ios') facetime = await Linking.canOpenURL('facetime://');
+      } catch {}
+      try {
+        skype = await Linking.canOpenURL('skype:');
+      } catch {}
       setAvailableCallApps({ facetime, skype });
     })();
   }, []);
@@ -87,144 +97,202 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <Text style={styles.header}>Settings</Text>
-
-        <Text style={styles.sectionTitle}>Contacts</Text>
-        <View style={styles.row}>
-          <Text style={styles.label}>Name order</Text>
-          <View style={{ flexDirection: 'row' }}>
-            <TouchableOpacity
-              style={[styles.choice, settings.nameOrder === 'firstLast' && styles.choiceSelected]}
+    <Screen
+      scroll
+      footer={
+        <BottomActionBar>
+          <View style={{ gap: 12 }}>
+            <PrimaryButton label="Open Notification Access" onPress={openNotificationAccessSettings} />
+            <PrimaryButton label={busy ? 'Exporting…' : 'Export to Outlook CSV'} onPress={handleExport} />
+            <PrimaryButton label={busy ? 'Importing…' : 'Import from Outlook CSV'} onPress={handleImportCsv} />
+            <PrimaryButton label={busy ? 'Importing…' : 'Import All from Device Contacts'} onPress={handleImportDevice} />
+            <SecondaryNav label="BACK" onPress={() => router.back()} />
+          </View>
+        </BottomActionBar>
+      }
+    >
+      <View style={{ gap: 24 }}>
+        <View style={{ gap: 12 }}>
+          <Text style={styles.sectionTitle}>Name order</Text>
+          <View style={styles.rowBetween}>
+            <Choice
+              selected={settings.nameOrder === 'firstLast'}
+              label="First Last"
               onPress={() => setOrder('firstLast')}
-              accessibilityRole="radio"
-              accessibilityState={{ checked: settings.nameOrder === 'firstLast' }}
-              accessibilityLabel="Show first name then last name"
-            >
-              <MaterialIcons name={settings.nameOrder === 'firstLast' ? 'radio-button-checked' : 'radio-button-unchecked'} size={18} color="#000" />
-              <Text style={styles.choiceText}>First Last</Text>
-            </TouchableOpacity>
-            <View style={{ width: 8 }} />
-            <TouchableOpacity
-              style={[styles.choice, settings.nameOrder === 'lastFirst' && styles.choiceSelected]}
+            />
+            <Choice
+              selected={settings.nameOrder === 'lastFirst'}
+              label="Last, First"
               onPress={() => setOrder('lastFirst')}
-              accessibilityRole="radio"
-              accessibilityState={{ checked: settings.nameOrder === 'lastFirst' }}
-              accessibilityLabel="Show last name then first name"
-            >
-              <MaterialIcons name={settings.nameOrder === 'lastFirst' ? 'radio-button-checked' : 'radio-button-unchecked'} size={18} color="#000" />
-              <Text style={styles.choiceText}>Last, First</Text>
-            </TouchableOpacity>
+            />
           </View>
         </View>
 
-        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Calling</Text>
-        <View style={styles.row}>
-          <Text style={styles.label}>Default calling method</Text>
-        </View>
-        <View style={[styles.row, { justifyContent: 'flex-start' }]}>
-          <TouchableOpacity
-            style={[styles.choice, settings.callMethod === 'ask' && styles.choiceSelected]}
-            onPress={() => setCallMethod('ask')}
-            accessibilityRole="radio"
-            accessibilityState={{ checked: settings.callMethod === 'ask' }}
-            accessibilityLabel="Ask every time which app to use"
-          >
-            <MaterialIcons name={settings.callMethod === 'ask' ? 'radio-button-checked' : 'radio-button-unchecked'} size={18} color="#000" />
-            <Text style={styles.choiceText}>Ask every time</Text>
-          </TouchableOpacity>
-          <View style={{ width: 8 }} />
-          <TouchableOpacity
-            style={[styles.choice, settings.callMethod === 'system' && styles.choiceSelected]}
-            onPress={() => setCallMethod('system')}
-            accessibilityRole="radio"
-            accessibilityState={{ checked: settings.callMethod === 'system' }}
-            accessibilityLabel="Use the system Phone app"
-          >
-            <MaterialIcons name={settings.callMethod === 'system' ? 'radio-button-checked' : 'radio-button-unchecked'} size={18} color="#000" />
-            <Text style={styles.choiceText}>Phone (system)</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={[styles.row, { justifyContent: 'flex-start' }]}>
-          {Platform.OS === 'ios' && availableCallApps.facetime && (
-            <TouchableOpacity
-              style={[styles.choice, settings.callMethod === 'facetime' && styles.choiceSelected]}
-              onPress={() => setCallMethod('facetime')}
-              accessibilityRole="radio"
-              accessibilityState={{ checked: settings.callMethod === 'facetime' }}
-              accessibilityLabel="Use FaceTime for calls"
-            >
-              <MaterialIcons name={settings.callMethod === 'facetime' ? 'radio-button-checked' : 'radio-button-unchecked'} size={18} color="#000" />
-              <Text style={styles.choiceText}>FaceTime</Text>
-            </TouchableOpacity>
-          )}
-          {availableCallApps.skype && (
-            <>
-              <View style={{ width: 8 }} />
-              <TouchableOpacity
-                style={[styles.choice, settings.callMethod === 'skype' && styles.choiceSelected]}
+        <View style={{ gap: 12 }}>
+          <Text style={styles.sectionTitle}>Default calling method</Text>
+          <View style={styles.rowBetween}>
+            <Choice
+              selected={settings.callMethod === 'ask'}
+              label="Ask every time"
+              onPress={() => setCallMethod('ask')}
+            />
+            <Choice
+              selected={settings.callMethod === 'system'}
+              label="Phone (system)"
+              onPress={() => setCallMethod('system')}
+            />
+          </View>
+          <View style={styles.rowBetween}>
+            {Platform.OS === 'ios' && availableCallApps.facetime ? (
+              <Choice
+                selected={settings.callMethod === 'facetime'}
+                label="FaceTime"
+                onPress={() => setCallMethod('facetime')}
+              />
+            ) : null}
+            {availableCallApps.skype ? (
+              <Choice
+                selected={settings.callMethod === 'skype'}
+                label="Skype"
                 onPress={() => setCallMethod('skype')}
-                accessibilityRole="radio"
-                accessibilityState={{ checked: settings.callMethod === 'skype' }}
-                accessibilityLabel="Use Skype for calls"
-              >
-                <MaterialIcons name={settings.callMethod === 'skype' ? 'radio-button-checked' : 'radio-button-unchecked'} size={18} color="#000" />
-                <Text style={styles.choiceText}>Skype</Text>
-              </TouchableOpacity>
-            </>
-          )}
+              />
+            ) : null}
+          </View>
         </View>
 
-        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Notifications</Text>
-        <View style={styles.row}>
-          <Text style={styles.label}>Show in-app "Likely" popup</Text>
+        <Row label='Show in-app "Likely" popup'>
           <Switch value={settings.likelyPopupEnabled} onValueChange={() => toggle('likelyPopupEnabled')} />
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>Heads-up when backgrounded</Text>
+        </Row>
+        <Row label="Heads-up when backgrounded">
           <Switch value={settings.headsUpEnabled} onValueChange={() => toggle('headsUpEnabled')} />
-        </View>
-
-        <TouchableOpacity style={styles.button} onPress={openNotificationAccessSettings}>
-          <MaterialIcons name="notifications" size={18} color="#fff" />
-          <Text style={styles.buttonText}>Open Notification Access</Text>
-        </TouchableOpacity>
-
-        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Transfer (Outlook)</Text>
-        <TouchableOpacity style={styles.button} onPress={handleExport} disabled={busy}>
-          <MaterialIcons name="file-upload" size={18} color="#fff" />
-          <Text style={styles.buttonText}>{busy ? 'Exporting…' : 'Export to Outlook CSV'}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={handleImportCsv} disabled={busy}>
-          <MaterialIcons name="file-download" size={18} color="#fff" />
-          <Text style={styles.buttonText}>{busy ? 'Importing…' : 'Import from Outlook CSV'}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={handleImportDevice} disabled={busy}>
-          <MaterialIcons name="contacts" size={18} color="#fff" />
-          <Text style={styles.buttonText}>{busy ? 'Importing…' : 'Import All from Device Contacts'}</Text>
-        </TouchableOpacity>
+        </Row>
 
         {!!lastMessage && <Text style={styles.message}>{lastMessage}</Text>}
-
-        <View style={{ height: 16 }} />
-        <Button title="Back" onPress={() => router.back()} />
       </View>
-    </SafeAreaView>
+    </Screen>
+  );
+}
+
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <View style={styles.row}>
+      <Text style={styles.rowLabel}>{label}</Text>
+      <View>{children}</View>
+    </View>
+  );
+}
+
+function Choice({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
+  return (
+    <TouchableOpacity
+      style={[styles.choice, selected && styles.choiceSelected]}
+      onPress={onPress}
+      accessibilityRole="radio"
+      accessibilityState={{ checked: selected }}
+    >
+      <View style={styles.radioOuter}>{selected ? <View style={styles.radioInner} /> : null}</View>
+      <Text style={styles.choiceText}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
+function PrimaryButton({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <TouchableOpacity onPress={onPress} style={styles.primaryBtn} accessibilityRole="button">
+      <Text style={styles.primaryText}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
+function SecondaryNav({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <TouchableOpacity onPress={onPress} style={styles.secondaryNav} accessibilityRole="button">
+      <Text style={styles.secondaryText}>{label}</Text>
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#fff' },
-  container: { padding: 16 },
-  header: { fontSize: 22, fontWeight: 'bold', marginBottom: 12 },
-  sectionTitle: { fontSize: 16, fontWeight: '600', marginBottom: 8 },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8 },
-  label: { color: '#222', flex: 1, paddingRight: 12 },
-  choice: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'transparent', paddingVertical: 6, paddingHorizontal: 8, borderRadius: 6, borderWidth: 1, borderColor: '#ddd' },
-  choiceSelected: { backgroundColor: '#eee', borderColor: '#bbb' },
-  choiceText: { marginLeft: 6 },
-  button: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#03A9F4', paddingVertical: 10, paddingHorizontal: 12, borderRadius: 8, marginVertical: 6 },
-  buttonText: { color: '#fff', marginLeft: 8, fontWeight: '600' },
-  message: { marginTop: 12, color: '#333' },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0F172A',
+  },
+  row: {
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  rowBetween: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  rowLabel: {
+    flex: 1,
+    fontSize: 16,
+    color: '#0F172A',
+    paddingRight: 12,
+  },
+  choice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    minHeight: 48,
+    flex: 1,
+  },
+  choiceSelected: { backgroundColor: '#F1F5F9', borderColor: '#94A3B8' },
+  choiceText: { marginLeft: 8, color: '#0F172A' },
+  radioOuter: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#0F172A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#0F172A',
+  },
+  primaryBtn: {
+    minHeight: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    backgroundColor: '#0EA5E9',
+    elevation: 1,
+  },
+  primaryText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  secondaryNav: {
+    minHeight: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+  },
+  secondaryText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  message: { marginTop: 8, color: '#334155' },
 });
+

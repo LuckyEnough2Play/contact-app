@@ -10,7 +10,7 @@ import {
   UIManager,
   PanResponder,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import Screen from '../components/Screen';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -214,7 +214,7 @@ export default function HomeScreen() {
   const listHeight = Math.max(MIN_LIST, splitAreaH - (tagHeight + HANDLE_H));
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
+    <Screen scroll={false} padding={0}>
       <View style={styles.topBar}>
         <TextInput
           style={styles.search}
@@ -245,7 +245,7 @@ export default function HomeScreen() {
           <TagPane tags={tagCounts} toggle={toggleTag} remove={removeTag} height={tagHeight} />
         </View>
       </View>
-    </SafeAreaView>
+    </Screen>
   );
 }
 
