@@ -263,7 +263,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   cell: {
-    flex: 1,
     minWidth: 0,
   },
   row: {
@@ -273,11 +272,9 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 16,
-    backgroundColor: '#22A6F2',
+    backgroundColor: '#03A9F4',
     margin: 4,
-    alignSelf: 'stretch',
     maxWidth: '100%',
-    flexShrink: 1,
   },
   chipSelected: {
     backgroundColor: '#FFD700',
