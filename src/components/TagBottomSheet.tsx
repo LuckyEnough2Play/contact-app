@@ -169,7 +169,7 @@ export default function TagBottomSheet({ tags, onTagPress, onTagLongPress }: Pro
       style={styles.sheet}
       backgroundStyle={styles.sheetBg}
     >
-      <BottomSheetView style={[styles.content, { paddingBottom: BOTTOM_SAFE }]} onLayout={(e) => setViewportH(e.nativeEvent.layout.height)}>
+      <BottomSheetView style={[styles.content, { paddingBottom: BOTTOM_SAFE }]}>
         <View style={styles.controlsRow}>
           <TextInput
             value={query}
@@ -201,8 +201,9 @@ export default function TagBottomSheet({ tags, onTagPress, onTagLongPress }: Pro
           <BottomSheetScrollView
             style={styles.scroll}
             contentContainerStyle={[styles.gridWrap, { paddingBottom: BOTTOM_SAFE + 16, paddingTop: 4, paddingHorizontal: 4 }]}
-            showsVerticalScrollIndicator={false}
+            showsVerticalScrollIndicator
             nestedScrollEnabled
+            scrollEventThrottle={16}
             onContentSizeChange={(_, h) => setContentH(h)}
             onScroll={(e) => setOffsetY(e.nativeEvent.contentOffset.y)}
           >

@@ -48,7 +48,9 @@ export default function TagPane({ tags, toggle, remove, height, scrollEnabled = 
     });
   }, [tags]);
 
-  const wrapperStyle = height != null ? [styles.wrapperBase, { height }] : [styles.wrapperBase, styles.wrapperMax];
+  // Ensure a bounded viewport height so ScrollView can actually scroll
+  const resolvedHeight = height ?? 120;
+  const wrapperStyle = [styles.wrapperBase, { height: resolvedHeight }];
 
   return (
     <>
@@ -56,7 +58,8 @@ export default function TagPane({ tags, toggle, remove, height, scrollEnabled = 
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.container}
-          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator
+          nestedScrollEnabled
           scrollEnabled={scrollEnabled}
           onContentSizeChange={(_, h) => setContentH(h)}
           onScroll={(e) => {
