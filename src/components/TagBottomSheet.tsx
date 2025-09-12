@@ -34,7 +34,8 @@ export default function TagBottomSheet({ tags, onTagPress, onTagLongPress }: Pro
   const BOTTOM_SAFE = Math.max(insets.bottom, 12);
 
   const snapPoints = useMemo(() => {
-    return [COLLAPSED_VISIBLE + BOTTOM_SAFE, '55%'] as const;
+    // Collapsed, medium, and near-full height for easier browsing
+    return [COLLAPSED_VISIBLE + BOTTOM_SAFE, '55%', '92%'] as const;
   }, [BOTTOM_SAFE]);
 
   useEffect(() => {
@@ -198,6 +199,7 @@ export default function TagBottomSheet({ tags, onTagPress, onTagLongPress }: Pro
         </View>
         <View style={{ position: 'relative', flex: 1 }} onLayout={(e) => setViewportH(e.nativeEvent.layout.height)}>
           <BottomSheetScrollView
+            style={styles.scroll}
             contentContainerStyle={[styles.gridWrap, { paddingBottom: BOTTOM_SAFE + 16, paddingTop: 4, paddingHorizontal: 4 }]}
             showsVerticalScrollIndicator={false}
             nestedScrollEnabled
@@ -233,6 +235,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
   },
+  scroll: { flex: 1 },
   handle: {
     alignItems: 'center',
     paddingTop: 8,
