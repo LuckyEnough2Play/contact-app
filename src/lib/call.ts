@@ -1,7 +1,7 @@
 import { Alert, Linking, Platform } from 'react-native';
 import { normalizeNumber } from './phone';
 
-export type CallApp = 'system' | 'facetime' | 'skype';
+export type CallApp = 'system' | 'facetime' | 'skype' | 'whatsapp' | 'telegram' | 'viber';
 export type CallMethod = 'ask' | CallApp;
 
 export interface CallOption {
@@ -10,10 +10,10 @@ export interface CallOption {
 }
 
 const SYSTEM_OPTION: CallOption = { key: 'system', label: Platform.OS === 'ios' ? 'Phone' : 'Phone (system)' };
-const FACETIME_OPTION: CallOption = { key: 'facetime', label: 'FaceTime' };
-const SKYPE_OPTION: CallOption = { key: 'skype', label: 'Skype' };
 
-function schemeFor(method: CallApp, numberRaw: string): string {
+// Supported third-party calling/chat apps offered in the in-app chooser.
+
+function buildUrl(method: CallApp, numberRaw: string): string {
   const number = normalizeNumber(numberRaw);
   switch (method) {
     case 'system':
@@ -22,24 +22,38 @@ function schemeFor(method: CallApp, numberRaw: string): string {
       // iOS only; Android will fail canOpenURL and we fallback.
       return `facetime://${number}`;
     case 'skype':
-      // Skype call scheme; will open Skype if installed.
+      // Skype call scheme; opens Skype if installed.
       return `skype:${number}?call`;
+    case 'whatsapp':
+      // WhatsApp chat with number (user can tap call). Requires E.164 without spaces.
+      return `whatsapp://send?phone=${encodeURIComponent(number)}`;
+    case 'telegram':
+      // Telegram: open chat by phone (may not work if number not on Telegram)
+      return `tg://msg?to=${encodeURIComponent(number.replace(/^\+/, ''))}`;
+    case 'viber':
+      // Viber: open contact by number (user can tap call)
+      return `viber://contact?number=${encodeURIComponent(number.replace(/^\+/, ''))}`;
   }
 }
 
 export async function getAvailableCallOptions(): Promise<CallOption[]> {
   const options: CallOption[] = [SYSTEM_OPTION];
-  try {
-    if (Platform.OS === 'ios') {
-      // FaceTime is part of iOS; still guard via canOpenURL in case of restrictions.
-      const canFT = await Linking.canOpenURL('facetime://');
-      if (canFT) options.push(FACETIME_OPTION);
-    }
-  } catch {}
-  try {
-    const canSkype = await Linking.canOpenURL('skype:');
-    if (canSkype) options.push(SKYPE_OPTION);
-  } catch {}
+  // Check known third-party apps. Some are platform-specific.
+  // On iOS, canOpenURL requires Info.plist LSApplicationQueriesSchemes in a real build.
+  const checks: Array<{ opt: CallOption; probe: string; allowOn: 'ios' | 'android' | 'both' }> = [
+    { opt: { key: 'facetime', label: 'FaceTime' }, probe: 'facetime://', allowOn: 'ios' },
+    { opt: { key: 'skype', label: 'Skype' }, probe: 'skype:', allowOn: 'both' },
+    { opt: { key: 'whatsapp', label: 'WhatsApp' }, probe: 'whatsapp://', allowOn: 'both' },
+    { opt: { key: 'telegram', label: 'Telegram' }, probe: 'tg://', allowOn: 'both' },
+    { opt: { key: 'viber', label: 'Viber' }, probe: 'viber://', allowOn: 'both' },
+  ];
+  for (const { opt, probe, allowOn } of checks) {
+    if (allowOn !== 'both' && Platform.OS !== allowOn) continue;
+    try {
+      const can = await Linking.canOpenURL(probe);
+      if (can) options.push(opt);
+    } catch {}
+  }
   return options;
 }
 
@@ -51,7 +65,7 @@ export async function placeCall(numberRaw: string, prefer: CallMethod): Promise<
     return askAndCall(number);
   }
 
-  const url = schemeFor(prefer, number);
+  const url = buildUrl(prefer, number);
   try {
     const can = await Linking.canOpenURL(url);
     if (can) {
@@ -72,7 +86,7 @@ async function askAndCall(number: string): Promise<void> {
       text: opt.label,
       onPress: async () => {
         try {
-          const url = schemeFor(opt.key, number);
+          const url = buildUrl(opt.key, number);
           const can = await Linking.canOpenURL(url);
           if (can) {
             await Linking.openURL(url);
@@ -89,4 +103,3 @@ async function askAndCall(number: string): Promise<void> {
     Alert.alert('Call using', 'Choose an app to place the call', buttons, { cancelable: true });
   });
 }
-

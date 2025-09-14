@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Switch, Alert, TouchableOpacity, Linking, Platform } from 'react-native';
+import { View, Text, StyleSheet, Switch, Alert, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import Screen from '../components/Screen';
 import BottomActionBar from '../components/BottomActionBar';
 import { loadSettings, saveSettings, AppSettings } from '../lib/settings';
 import type { CallMethod } from '../lib/call';
+import { getAvailableCallOptions, type CallOption } from '../lib/call';
 import { exportOutlookCsv, importOutlookCsv, importAllFromDeviceContacts } from '../lib/transfer';
 import { openNotificationAccessSettings } from '../native/CallEvents';
 
@@ -19,22 +20,17 @@ export default function SettingsScreen() {
   });
   const [busy, setBusy] = useState(false);
   const [lastMessage, setLastMessage] = useState('');
-  const [availableCallApps, setAvailableCallApps] = useState<{ facetime: boolean; skype: boolean }>(
-    { facetime: false, skype: false }
-  );
+  const [availableCallOptions, setAvailableCallOptions] = useState<CallOption[]>([]);
 
   useEffect(() => {
     loadSettings().then(setSettings);
     (async () => {
-      let facetime = false;
-      let skype = false;
       try {
-        if (Platform.OS === 'ios') facetime = await Linking.canOpenURL('facetime://');
-      } catch {}
-      try {
-        skype = await Linking.canOpenURL('skype:');
-      } catch {}
-      setAvailableCallApps({ facetime, skype });
+        const opts = await getAvailableCallOptions();
+        setAvailableCallOptions(opts);
+      } catch {
+        setAvailableCallOptions([]);
+      }
     })();
   }, []);
 
@@ -142,21 +138,17 @@ export default function SettingsScreen() {
               onPress={() => setCallMethod('system')}
             />
           </View>
-          <View style={styles.rowBetween}>
-            {Platform.OS === 'ios' && availableCallApps.facetime ? (
-              <Choice
-                selected={settings.callMethod === 'facetime'}
-                label="FaceTime"
-                onPress={() => setCallMethod('facetime')}
-              />
-            ) : null}
-            {availableCallApps.skype ? (
-              <Choice
-                selected={settings.callMethod === 'skype'}
-                label="Skype"
-                onPress={() => setCallMethod('skype')}
-              />
-            ) : null}
+          <View style={[styles.rowBetween, { flexWrap: 'wrap' }]}>
+            {availableCallOptions
+              .filter((o) => o.key !== 'system')
+              .map((opt) => (
+                <Choice
+                  key={opt.key}
+                  selected={settings.callMethod === opt.key}
+                  label={opt.label}
+                  onPress={() => setCallMethod(opt.key as CallMethod)}
+                />
+              ))}
           </View>
         </View>
 
@@ -295,4 +287,3 @@ const styles = StyleSheet.create({
   },
   message: { marginTop: 8, color: '#334155' },
 });
-

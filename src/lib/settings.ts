@@ -7,7 +7,7 @@ export interface AppSettings {
   likelyPopupEnabled: boolean;
   headsUpEnabled: boolean;
   nameOrder: NameOrder;
-  callMethod: 'ask' | 'system' | 'facetime' | 'skype';
+  callMethod: 'ask' | 'system' | 'facetime' | 'skype' | 'whatsapp' | 'telegram' | 'viber';
 }
 
 const defaultSettings: AppSettings = {

@@ -10,7 +10,16 @@
     "newArchEnabled": false,
     "jsEngine": "jsc",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": [
+          "facetime",
+          "skype",
+          "whatsapp",
+          "tg",
+          "viber"
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {
