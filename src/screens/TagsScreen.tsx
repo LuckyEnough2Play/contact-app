@@ -9,7 +9,6 @@ import Screen from '../components/Screen';
 import { loadContactsSafe, saveContacts } from '../lib/storage';
 import { Contact } from '../lib/types';
 import { toggleTag as toggleTagGlobal, clearSelectedTags, loadSelectedTags, subscribeSelected, getSelectedTagsSync } from '../lib/tagSelection';
-import { NameOrder } from '../lib/names';
 
 type SortMode = 'count' | 'alpha';
 
@@ -226,4 +225,3 @@ const styles = StyleSheet.create({
   chipText: { color: '#fff', fontWeight: '600' },
   chipTextIrrelevant: { color: '#111', fontWeight: '600' },
 });
-

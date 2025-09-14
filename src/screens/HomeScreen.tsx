@@ -7,7 +7,6 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 import ContactList from '../components/ContactList';
 import Fuse from 'fuse.js';
-import { TagInfo } from '../components/TagPane';
 import { loadContactsSafe, saveContacts } from '../lib/storage';
 import { Contact } from '../lib/types';
 import { compareContacts, NameOrder } from '../lib/names';
@@ -49,8 +48,7 @@ export default function HomeScreen() {
     }, [load])
   );
 
-  // bottom padding to avoid contact rows being obscured by the collapsed sheet
-  const bottomPad = COLLAPSED_HEIGHT + Math.max(insets.bottom, 12) + 16;
+  // no bottom sheet; list can use full height
 
   const toggleTag = (tag: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -69,30 +67,6 @@ export default function HomeScreen() {
     // Remove from selection as well if present
     if (selectedTags.includes(tag)) toggleTagGlobal(tag);
   };
-
-  const tagCounts = useMemo<TagInfo[]>(() => {
-    const counts: Record<string, number> = {};
-    for (const c of contacts) {
-      for (const t of c.tags) {
-        counts[t] = (counts[t] || 0) + 1;
-      }
-    }
-    return Object.keys(counts).map((name) => {
-      const isSelected = selectedTags.includes(name);
-      let status: TagInfo['status'];
-      if (isSelected) {
-        status = 'selected';
-      } else {
-        const relevant = contacts.some(
-          (c) =>
-            c.tags.includes(name) &&
-            selectedTags.every((t) => c.tags.includes(t))
-        );
-        status = relevant ? 'relevant' : 'irrelevant';
-      }
-      return { name, count: counts[name], status };
-    });
-  }, [contacts, selectedTags]);
 
   const matchStatus = useCallback(
     (c: Contact): 'full' | 'partial' | 'none' => {

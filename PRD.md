@@ -37,8 +37,8 @@ Bubble Contacts is a private, offline contact manager for mobile. It provides fa
 
 | Feature | Description |
 |---|---|
-| Home: search + tags | Top search bar with fuzzy matching across all fields; adjustable tag pane below showing tag chips with counts and relevance. |
-| Tag filtering | Tap tags to filter; selected tags color contacts: full/partial/none match. Long-press a tag to delete it globally. |
+| Home: search + tags | Top search bar with fuzzy matching across all fields; compact selected‑tag bar with Clear; "Browse Tags" opens a full‑screen Tag Browser. |
+| Tag filtering | In the Tag Browser, tap chips to select/deselect; selection updates Home instantly. Selected tags color contacts: full/partial/none match. Long‑press a tag to delete it globally. |
 | Contact list | Virtualized list of cards, sorted by name; each card has quick call action. |
 | Add/Edit contact | Full-screen editor with first/last name, phone, email, birthday, company, title, and tags. Save/Delete actions. |
 | Single-contact import | From New/Edit screen, pick one device contact to populate the form before saving. |
@@ -105,10 +105,15 @@ Storage
 
 Home
 - Search field; results update as you type (fuzzy).
-- Drag handle between list and tag pane to resize the tag area.
-- Tap a tag to filter; long-press a tag to delete it (removes from all contacts).
+- Selected‑tag bar shows count and Clear; "Browse Tags" opens Tag Browser.
 - Tap a contact card to open Edit.
 - Top-right: Settings; Plus button to add new contact.
+
+Tag Browser (Full‑Screen)
+- Sticky header with search, sort (Count / A–Z), and selected summary with Clear.
+- Single virtualized list (sectioned): Selected, Relevant, All; sticky section headers.
+- Tap a tag to toggle; long‑press to delete globally (confirm dialog).
+- Persists last query and sort; closes back to Home with selection preserved.
 
 New/Edit Contact
 - Enter fields; tap “Set Birthday” to pick a date.
@@ -163,4 +168,3 @@ Device Contacts (bulk)
 
 - Search behavior: `docs/search.md`
 - Incoming calls: `docs/calls.md`
-
