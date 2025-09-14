@@ -13,16 +13,16 @@ import { Contact } from '../lib/types';
 import { compareContacts, NameOrder } from '../lib/names';
 import { AppSettings, loadSettings, subscribeSettings } from '../lib/settings';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { loadSelectedTags, subscribeSelected, toggleTag as toggleTagGlobal, clearSelectedTags, getSelectedTagsSync } from '../lib/tagSelection';
+import TagBottomSheet from '../components/TagBottomSheet';
 
 export default function HomeScreen() {
   const [contacts, setContacts] = useState<Contact[]>([]);
-  const [selectedTags, setSelectedTags] = useState<string[]>(getSelectedTagsSync());
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const COLLAPSED_HEIGHT = 0; // no bottom sheet; list can use full height
+  const COLLAPSED_HEIGHT = 120; // must match TagBottomSheet collapsed visible height
 
   useEffect(() => {
     if (Platform.OS === 'android') {
@@ -41,11 +41,14 @@ export default function HomeScreen() {
     useCallback(() => {
       load();
       let mounted = true;
-      loadSettings().then((s) => { if (mounted) setSettings(s); });
-      const unsubSettings = subscribeSettings((s) => setSettings(s));
-      loadSelectedTags().then((tags) => { if (mounted) setSelectedTags(tags); });
-      const unsubSel = subscribeSelected((tags) => setSelectedTags(tags));
-      return () => { mounted = false; unsubSettings(); unsubSel(); };
+      loadSettings().then((s) => {
+        if (mounted) setSettings(s);
+      });
+      const unsub = subscribeSettings((s) => setSettings(s));
+      return () => {
+        mounted = false;
+        unsub();
+      };
     }, [load])
   );
 
@@ -54,7 +57,9 @@ export default function HomeScreen() {
 
   const toggleTag = (tag: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    toggleTagGlobal(tag);
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
   };
 
   const removeTag = (tag: string) => {
@@ -66,8 +71,7 @@ export default function HomeScreen() {
       saveContacts(updated);
       return updated;
     });
-    // Remove from selection as well if present
-    if (selectedTags.includes(tag)) toggleTagGlobal(tag);
+    setSelectedTags((prev) => prev.filter((t) => t !== tag));
   };
 
   const tagCounts = useMemo<TagInfo[]>(() => {
@@ -176,9 +180,7 @@ export default function HomeScreen() {
     router.push(`/new?id=${c.id}`);
   };
 
-  const openTags = () => router.push('/tags');
-
-  // Contact list occupies full height
+  // Contact list occupies full height; bottom padding ensures last rows are reachable
 
   return (
     <Screen scroll={false} padding={0}>
@@ -196,27 +198,17 @@ export default function HomeScreen() {
           <Text style={styles.addButtonText}>+</Text>
         </TouchableOpacity>
       </View>
-      <View style={styles.selectedBar}>
-        <Text style={styles.selectedSummary}>{selectedTags.length ? `${selectedTags.length} selected` : 'No tags selected'}</Text>
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          {selectedTags.length ? (
-            <TouchableOpacity style={styles.clearButton} onPress={() => clearSelectedTags()} accessibilityLabel="Clear selected tags">
-              <Text style={styles.clearButtonText}>Clear</Text>
-            </TouchableOpacity>
-          ) : null}
-          <TouchableOpacity style={styles.browseButton} onPress={openTags} accessibilityLabel="Browse tags">
-            <Text style={styles.browseButtonText}>Browse Tags</Text>
-          </TouchableOpacity>
+      <View style={styles.splitArea}>
+        <View style={[styles.listContainerFixed, { flex: 1 }]}>
+          <ContactList
+            contacts={ordered}
+            getMatch={matchStatus}
+            onPress={handlePressContact}
+            nameOrder={nameOrder}
+            bottomPadding={bottomPad}
+          />
         </View>
-      </View>
-      <View style={[styles.listContainerFixed, { flex: 1 }]}>
-        <ContactList
-          contacts={ordered}
-          getMatch={matchStatus}
-          onPress={handlePressContact}
-          nameOrder={nameOrder}
-          bottomPadding={Math.max(insets.bottom, 12)}
-        />
+        <TagBottomSheet tags={tagCounts} onTagPress={toggleTag} onTagLongPress={removeTag} />
       </View>
     </Screen>
   );
@@ -263,17 +255,6 @@ const styles = StyleSheet.create({
   },
   splitArea: { flex: 1 },
   listContainerFixed: { position: 'relative' },
-  selectedBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  selectedSummary: { color: '#475569', fontWeight: '500' },
-  browseButton: { backgroundColor: '#03A9F4', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
-  browseButtonText: { color: '#fff', fontWeight: '600' },
-  clearButton: { backgroundColor: '#EEF2F7', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
-  clearButtonText: { color: '#111', fontWeight: '600' },
   // legacy split styles removed by bottom sheet integration
 });
+

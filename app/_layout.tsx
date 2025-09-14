@@ -32,6 +32,7 @@ export default function RootLayout() {
             <Stack.Screen name="new" />
             <Stack.Screen name="transfer" />
             <Stack.Screen name="settings" />
+            <Stack.Screen name="tags" />
             <Stack.Screen name="+not-found" />
           </Stack>
           <StatusBar style="dark" translucent backgroundColor="transparent" />
