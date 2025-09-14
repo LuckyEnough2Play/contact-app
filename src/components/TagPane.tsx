@@ -55,34 +55,42 @@ export default function TagPane({ tags, toggle, remove, height, scrollEnabled = 
   return (
     <>
       <View style={wrapperStyle as any} onLayout={(e) => setViewportH(e.nativeEvent.layout.height)}>
+        {/* Outer scroll container disabled; inner handles actual scrolling */}
         <ScrollView
           style={styles.scroll}
-          contentContainerStyle={styles.container}
-          showsVerticalScrollIndicator
+          showsVerticalScrollIndicator={false}
           nestedScrollEnabled
-          scrollEnabled={scrollEnabled}
-          onContentSizeChange={(_, h) => setContentH(h)}
-          onScroll={(e) => {
-            const y = e.nativeEvent.contentOffset.y;
-            setOffsetY(y);
-            onScrollOffsetChange?.(y);
-          }}
-          scrollEventThrottle={16}
+          scrollEnabled={false}
         >
-        {sorted.map((t) => (
-          <TouchableOpacity
-            key={t.name}
-            style={[
-              styles.tag,
-              t.status === 'selected' && styles.selected,
-              t.status === 'irrelevant' && styles.irrelevant,
-            ]}
-            onPress={() => toggle(t.name)}
-            onLongPress={() => setPendingDelete(t.name)}
+          <ScrollView
+            style={styles.innerScroll}
+            contentContainerStyle={styles.container}
+            showsVerticalScrollIndicator
+            nestedScrollEnabled
+            scrollEnabled={scrollEnabled}
+            onContentSizeChange={(_, h) => setContentH(h)}
+            onScroll={(e) => {
+              const y = e.nativeEvent.contentOffset.y;
+              setOffsetY(y);
+              onScrollOffsetChange?.(y);
+            }}
+            scrollEventThrottle={16}
           >
-            <Text style={styles.text}>{`${t.name} (${t.count})`}</Text>
-          </TouchableOpacity>
-        ))}
+            {sorted.map((t) => (
+              <TouchableOpacity
+                key={t.name}
+                style={[
+                  styles.tag,
+                  t.status === 'selected' && styles.selected,
+                  t.status === 'irrelevant' && styles.irrelevant,
+                ]}
+                onPress={() => toggle(t.name)}
+                onLongPress={() => setPendingDelete(t.name)}
+              >
+                <Text style={styles.text}>{`${t.name} (${t.count})`}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </ScrollView>
         <ScrollIndicator viewportHeight={viewportH} contentHeight={contentH} scrollOffset={offsetY} />
       </View>
@@ -117,11 +125,13 @@ const styles = StyleSheet.create({
   wrapperBase: { position: 'relative' },
   wrapperMax: { maxHeight: 120 },
   scroll: {},
+  innerScroll: { flex: 1 },
   container: {
     padding: 8,
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'flex-start',
+    alignContent: 'flex-start',
   },
   tag: {
     backgroundColor: '#03A9F4',

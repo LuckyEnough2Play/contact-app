@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, TextInput } from 'react-native';
+import { View, Text, StyleSheet, Pressable, TextInput, ScrollView } from 'react-native';
 import BottomSheet, { BottomSheetView, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -198,17 +198,22 @@ export default function TagBottomSheet({ tags, onTagPress, onTagLongPress }: Pro
           ) : null}
         </View>
         <View style={{ position: 'relative', flex: 1 }} onLayout={(e) => setViewportH(e.nativeEvent.layout.height)}>
+          {/**
+           * Use a nested ScrollView inside BottomSheetScrollView so the tag grid
+           * can scroll independently and reach the very bottom.
+           */}
           <BottomSheetScrollView
             style={styles.scroll}
             contentContainerStyle={[styles.gridWrap, { paddingBottom: BOTTOM_SAFE + 16, paddingTop: 4, paddingHorizontal: 4 }]}
             showsVerticalScrollIndicator
             nestedScrollEnabled
-            scrollEventThrottle={16}
+            keyboardShouldPersistTaps="handled"
             onContentSizeChange={(_, h) => setContentH(h)}
             onScroll={(e) => setOffsetY(e.nativeEvent.contentOffset.y)}
+            scrollEventThrottle={16}
           >
             {filteredSorted.length === 0 ? (
-              <View style={styles.emptyState}> 
+              <View style={styles.emptyState}>
                 <Text style={styles.emptyTitle}>No tags</Text>
                 <Text style={styles.emptySubtitle}>
                   {query.trim() ? 'Try a different search.' : 'Add tags while editing contacts.'}
@@ -216,7 +221,7 @@ export default function TagBottomSheet({ tags, onTagPress, onTagLongPress }: Pro
               </View>
             ) : (
               filteredSorted.map((item) => (
-                <View key={item.name} style={styles.cell}> 
+                <View key={item.name} style={styles.cell}>
                   {renderChip({ item })}
                 </View>
               ))
@@ -258,6 +263,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 12,
   },
+  innerScroll: { flex: 1 },
   grid: {
     paddingBottom: 8,
   },
@@ -265,6 +271,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'flex-start',
+    alignContent: 'flex-start',
   },
   cell: {
     minWidth: 0,
